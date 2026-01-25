@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Admin Pro - React.js (v2.0)
 
 [Admin Pro] is a modern, responsive, and customizable admin template built using Tailwind CSS and React.js. It is designed to help developers build beautiful and functional dashboards quickly and easily.
@@ -97,3 +98,7 @@ A major update with comprehensive redesign and modern React patterns implementat
 - Revised authentication system
 
 [Read more](https://tailadmin.com/docs/update-logs/react) on the changelog.
+=======
+# PSI
+Pressure vessel Support Indicator
+>>>>>>> f95af549a2aac5580aed1b9f8b9e7b0d468b0c98
