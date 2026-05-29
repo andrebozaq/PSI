@@ -1,13 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useSidebar } from '../context/SidebarContext';
 import { ThemeToggleButton } from '../components/common/ThemeToggleButton';
 import NotificationDropdown from '../components/header/NotificationDropdown';
 import UserDropdown from '../components/header/UserDropdown';
+import {
+  navItems,
+  supportItems,
+  othersItems,
+  type NavItem,
+} from './AppSidebar';
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<{ name: string; path: string }[]>([]);
+
+  const navigate = useNavigate();
 
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
 
@@ -25,6 +35,22 @@ const AppHeader: React.FC = () => {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const flattenedNavItems = useMemo(() => {
+    const flatten = (items: NavItem[]) =>
+      items.flatMap((item) => {
+        const own = item.path ? [{ name: item.name, path: item.path }] : [];
+        const subs =
+          item.subItems?.map((s) => ({ name: s.name, path: s.path })) ?? [];
+        return [...own, ...subs];
+      });
+
+    return [
+      ...flatten(navItems),
+      ...flatten(supportItems),
+      ...flatten(othersItems),
+    ];
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
@@ -40,8 +66,37 @@ const AppHeader: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const value = query.trim().toLowerCase();
+    if (value.length < 3) {
+      setResults([]);
+      return;
+    }
+
+    setResults(
+      flattenedNavItems.filter((item) =>
+        item.name.toLowerCase().includes(value),
+      ),
+    );
+  }, [query, flattenedNavItems]);
+
+  const handleSelect = (path: string) => {
+    if (!path) return;
+    navigate(path);
+    setQuery('');
+    setResults([]);
+    inputRef.current?.blur();
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (results[0]) {
+      handleSelect(results[0].path);
+    }
+  };
+
   return (
-    <header className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 dark:border-gray-800 dark:bg-gray-900 lg:border-b">
+    <header className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 dark:border-gray-800 dark:bg-gray-900 lg:border-b print:hidden">
       <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
         <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-gray-200 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
           <button
@@ -85,12 +140,12 @@ const AppHeader: React.FC = () => {
 
           <Link to="/" className="lg:hidden">
             <img
-              className="dark:hidden"
+              className="h-8 w-auto dark:hidden sm:h-9"
               src="./images/logo/PSI-logo.png"
               alt="Logo"
             />
             <img
-              className="hidden dark:block"
+              className="hidden h-8 w-auto dark:block sm:h-9"
               src="./images/logo/PSI-logo.png"
               alt="Logo"
             />
@@ -117,7 +172,7 @@ const AppHeader: React.FC = () => {
           </button>
 
           <div className="hidden lg:block">
-            <form>
+            <form onSubmit={handleSubmit} className="relative">
               <div className="relative">
                 <span className="absolute -translate-y-1/2 pointer-events-none left-4 top-1/2">
                   <svg
@@ -139,6 +194,8 @@ const AppHeader: React.FC = () => {
                 <input
                   ref={inputRef}
                   type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
                   placeholder="Buscar o escribir el comando..."
                   className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-14 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 xl:w-[430px]"
                 />
@@ -148,6 +205,24 @@ const AppHeader: React.FC = () => {
                   <span> K </span>
                 </button>
               </div>
+
+              {results.length > 0 && (
+                <div className="absolute z-50 w-full mt-2 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-gray-900">
+                  <ul className="max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
+                    {results.slice(0, 8).map((item) => (
+                      <li key={item.path}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelect(item.path)}
+                          className="flex w-full items-center justify-between px-3 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-white/5"
+                        >
+                          <span>{item.name}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </form>
           </div>
         </div>

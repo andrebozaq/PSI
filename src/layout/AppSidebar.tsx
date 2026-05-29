@@ -1,17 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GiIBeam } from 'react-icons/gi';
 import { MdPropaneTank } from 'react-icons/md';
+import { BsPatchQuestionFill } from 'react-icons/bs';
 
 import { Link, useLocation } from 'react-router';
 
 // Assume these icons are imported from an icon library
 import {
   BoxCubeIcon,
-  CalenderIcon,
   ChatIcon,
   ChevronDownIcon,
   DocsIcon,
-  // GridIcon,
   HorizontaLDots,
   ListIcon,
   MailIcon,
@@ -19,20 +18,19 @@ import {
   PieChartIcon,
   PlugInIcon,
   TableIcon,
-  TaskIcon,
   UserCircleIcon,
 } from '../icons';
 import { useSidebar } from '../context/SidebarContext';
 import SidebarWidget from './SidebarWidget';
 
-type NavItem = {
+export type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-const navItems: NavItem[] = [
+export const navItems: NavItem[] = [
   {
     icon: [
       <svg
@@ -59,7 +57,11 @@ const navItems: NavItem[] = [
     name: 'Elementos a presión',
     subItems: [
       { name: 'Recipientes', path: '/recipientes-analisis', pro: false },
-      { name: 'Análisis de soportes', path: '/soporte-analisis', pro: false },
+      {
+        name: 'Análisis de soportes',
+        path: '/soporte-analisis-editor',
+        pro: false,
+      },
       { name: 'Diseño de soportes', path: '/soporte-diseno', pro: false },
     ],
   },
@@ -82,20 +84,16 @@ const navItems: NavItem[] = [
       },
     ],
   },
-  {
-    icon: <CalenderIcon />,
-    name: 'Calendario',
-    path: '/calendario',
-  },
 
-  {
-    name: 'Tareas',
-    icon: <TaskIcon />,
-    subItems: [
-      { name: 'Lista', path: '/task-list', pro: false },
-      { name: 'Kanban', path: '/task-kanban', pro: false },
-    ],
-  },
+  // {
+  // {
+  //   name: 'Tareas',
+  //   icon: <TaskIcon />,
+  //   subItems: [
+  //     { name: 'Lista', path: '/task-list', pro: false },
+  //     { name: 'Kanban', path: '/task-kanban', pro: false },
+  //   ],
+  // },
   {
     name: 'Formularios',
     icon: <ListIcon />,
@@ -118,7 +116,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: 'File Manager', path: '/file-manager', pro: false },
       { name: 'Pricing Tables', path: '/pricing-tables', pro: false },
-      { name: 'Faqs', path: '/faq', pro: false },
+
       { name: 'Blank Page', path: '/blank', pro: false },
       { name: '404 Error', path: '/error-404', pro: false },
       { name: '500 Error', path: '/error-500', pro: false },
@@ -128,14 +126,20 @@ const navItems: NavItem[] = [
       { name: 'Success', path: '/success', pro: false },
     ],
   },
+
   {
     icon: <UserCircleIcon />,
     name: 'Perfil de Usuario',
     path: '/perfil',
   },
+  {
+    icon: <BsPatchQuestionFill />,
+    name: 'Preguntas frecuentes',
+    path: '/faq',
+  },
 ];
 
-const othersItems: NavItem[] = [
+export const othersItems: NavItem[] = [
   {
     icon: <PieChartIcon />,
     name: 'Gráficos',
@@ -189,7 +193,7 @@ const othersItems: NavItem[] = [
   },
 ];
 
-const supportItems: NavItem[] = [
+export const supportItems: NavItem[] = [
   {
     icon: <ChatIcon />,
     name: 'Chat',
@@ -205,8 +209,8 @@ const supportItems: NavItem[] = [
   },
   {
     icon: <DocsIcon />,
-    name: 'Invoice',
-    path: '/invoice',
+    name: 'Documentación',
+    path: '/documentacion',
   },
 ];
 
@@ -219,14 +223,14 @@ const AppSidebar: React.FC = () => {
     index: number;
   } | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
-    {}
+    {},
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // const isActive = (path: string) => location.pathname === path;
   const isActive = useCallback(
     (path: string) => location.pathname === path,
-    [location.pathname]
+    [location.pathname],
   );
 
   useEffect(() => {
@@ -236,8 +240,8 @@ const AppSidebar: React.FC = () => {
         menuType === 'main'
           ? navItems
           : menuType === 'support'
-          ? supportItems
-          : othersItems;
+            ? supportItems
+            : othersItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
@@ -272,7 +276,7 @@ const AppSidebar: React.FC = () => {
 
   const handleSubmenuToggle = (
     index: number,
-    menuType: 'main' | 'support' | 'others'
+    menuType: 'main' | 'support' | 'others',
   ) => {
     setOpenSubmenu((prevOpenSubmenu) => {
       if (
@@ -288,7 +292,7 @@ const AppSidebar: React.FC = () => {
 
   const renderMenuItems = (
     items: NavItem[],
-    menuType: 'main' | 'support' | 'others'
+    menuType: 'main' | 'support' | 'others',
   ) => (
     <ul className="flex flex-col gap-4">
       {items.map((nav, index) => (
@@ -414,13 +418,13 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-0 lg:mt-0 flex flex-col top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
         ${
           isExpanded || isMobileOpen
             ? 'w-[290px]'
             : isHovered
-            ? 'w-[290px]'
-            : 'w-[90px]'
+              ? 'w-[290px]'
+              : 'w-[90px]'
         }
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0`}
@@ -436,14 +440,14 @@ const AppSidebar: React.FC = () => {
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <img
-                className="dark:hidden"
+                className="hidden sm:block dark:sm:hidden"
                 src="/images/logo/PSI.png"
                 alt="Logo"
                 width={250}
                 height={40}
               />
               <img
-                className="hidden dark:block"
+                className="hidden dark:sm:block"
                 src="/images/logo/PSI.png"
                 alt="Logo"
                 width={250}
@@ -472,7 +476,7 @@ const AppSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  'Menú'
+                  'Principal'
                 ) : (
                   <HorizontaLDots className="size-6" />
                 )}

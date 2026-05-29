@@ -10,7 +10,7 @@ export default function ComingSoon() {
   return (
     <>
       <PageMeta
-        title="React.js Coming Soon Dashboard | TailAdmin - React.js Admin Dashboard Template"
+        title="PSI Análisis de vigas | Software de ingeniería"
         description="This is React.js Coming Soon  Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
       <div className="relative flex flex-col items-center justify-center w-full min-h-screen p-6 overflow-hidden z-1">

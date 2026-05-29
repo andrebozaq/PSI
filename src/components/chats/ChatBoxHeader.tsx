@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Dropdown } from "../ui/dropdown/Dropdown";
-import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { MoreDotIcon } from "../../icons";
+import { useState } from 'react';
+import { Dropdown } from '../ui/dropdown/Dropdown';
+import { DropdownItem } from '../ui/dropdown/DropdownItem';
+import { MoreDotIcon } from '../../icons';
 
 export default function ChatBoxHeader() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,7 +18,7 @@ export default function ChatBoxHeader() {
       <div className="flex items-center gap-3">
         <div className="relative h-12 w-full max-w-[48px] rounded-full">
           <img
-            src="./images/user/user-17.jpg"
+            src="./images/user/user-04.png"
             alt="profile"
             className="object-cover object-center w-full h-full overflow-hidden rounded-full"
           />
@@ -26,7 +26,7 @@ export default function ChatBoxHeader() {
         </div>
 
         <h5 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-          Lindsey Curtis
+          Rafita
         </h5>
       </div>
 
@@ -80,13 +80,13 @@ export default function ChatBoxHeader() {
                 onItemClick={closeDropdown}
                 className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
               >
-                View More
+                Ver Más
               </DropdownItem>
               <DropdownItem
                 onItemClick={closeDropdown}
                 className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
               >
-                Delete
+                Eliminar
               </DropdownItem>
             </Dropdown>
           </div>

@@ -13,7 +13,7 @@ export default function Analytics() {
   return (
     <>
       <PageMeta
-        title="UPS análisis | Software para soportes de recipientes a presión"
+        title="PSI Análisis de | Software de ingeniería"
         description="This is React.js Analytics Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
       <div className="grid grid-cols-12 gap-4 md:gap-6">

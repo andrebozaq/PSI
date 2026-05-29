@@ -3,9 +3,13 @@ import { createPortal } from 'react-dom';
 import Alert from '../../../components/ui/alert/Alert';
 
 const Legs: React.FC<{
-  form: any;
-  onFieldChange: (k: string, v: any) => void;
-}> = ({ form, onFieldChange }) => {
+  form: Record<string, string>;
+  onFieldChange: (k: string, v: string) => void;
+  unitSystem?: 'SI' | 'US';
+  mode?: 'design' | 'analysis';
+}> = ({ form, onFieldChange, unitSystem = 'SI', mode = 'analysis' }) => {
+  void mode;
+  const lengthUnit = unitSystem === 'SI' ? 'mm' : 'in';
   const boltRef = useRef<HTMLInputElement | null>(null);
   const [alertPos, setAlertPos] = useState<{
     left: number;
@@ -27,6 +31,11 @@ const Legs: React.FC<{
   );
   const isSphere = form && form.vesselType === 'Esférico';
   const isVertical = form && form.vesselType === 'Columna vertical';
+  const legProfile = form?.legProfile || '';
+  const isAngleProfile = /Angle|Ángulo|\(L\)/i.test(legProfile);
+  const isBeamProfile = /Beam|W\/I|Viga/i.test(legProfile);
+  const isHssProfile = /HSS|cuadrado/i.test(legProfile);
+  const isPipeProfile = /Pipe|Tube|Tubo|Sch 40\/80/i.test(legProfile) && !isHssProfile;
 
   useEffect(() => {
     const update = () => {
@@ -60,6 +69,7 @@ const Legs: React.FC<{
       window.removeEventListener('scroll', update, true);
     };
   }, [
+    form,
     form?.legBoltCircle,
     form?.outerDiameter,
     form?.vesselType,
@@ -94,12 +104,12 @@ const Legs: React.FC<{
     if (isHorizontalLeg && form.legQuantity !== '4') {
       onFieldChange('legQuantity', '4');
     }
-  }, [isHorizontalLeg, form?.legQuantity]);
+  }, [isHorizontalLeg, form?.legQuantity, onFieldChange]);
 
   return (
     <div className="space-y-2">
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Leg quantity
+        Cantidad de patas
         <select
           value={isHorizontalLeg ? '4' : form.legQuantity || '2'}
           onChange={(e) => onFieldChange('legQuantity', e.target.value)}
@@ -114,21 +124,14 @@ const Legs: React.FC<{
       </label>
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Leg profile
+        Perfil de la pata
         {(() => {
-          const isBraced = !!(
-            form &&
-            form.supportType &&
-            /arriostrada/i.test(form.supportType)
-          );
-          const options = isBraced
-            ? [
-                'Angle (L)',
-                'Beam (W/I)',
-                'Pipe (Sch 40/80)',
-                'Square Tube (HSS)',
-              ]
-            : ['Rectangular', 'Angle', 'Tube'];
+          const options = [
+            'Ángulo (L)',
+            'Viga (W/I)',
+            'Tubo (Sch 40/80)',
+            'Tubo cuadrado (HSS)',
+          ];
           return (
             <select
               value={form.legProfile || options[0]}
@@ -142,9 +145,158 @@ const Legs: React.FC<{
           );
         })()}
       </label>
+
+      {/* Profile dimensions */}
+      {isAngleProfile && (
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <label className="text-sm text-gray-600 dark:text-gray-300">
+            Ancho del ala (b) ({lengthUnit})
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={form.legAngleWidth || ''}
+              onChange={(e) => onFieldChange('legAngleWidth', e.target.value)}
+              className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+            />
+          </label>
+          <label className="text-sm text-gray-600 dark:text-gray-300">
+            Espesor (t) ({lengthUnit})
+            <input
+              type="number"
+              min="0"
+              value={form.legAngleThickness || ''}
+              onChange={(e) =>
+                onFieldChange('legAngleThickness', e.target.value)
+              }
+              className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+            />
+          </label>
+        </div>
+      )}
+
+      {isPipeProfile && (
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <label className="text-sm text-gray-600 dark:text-gray-300">
+            Diámetro exterior del tubo/pipa ({lengthUnit})
+            <input
+              type="number"
+              min="0"
+              value={form.legPipeOD || ''}
+              onChange={(e) => onFieldChange('legPipeOD', e.target.value)}
+              className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+            />
+          </label>
+          <label className="text-sm text-gray-600 dark:text-gray-300">
+            Espesor de la pared ({lengthUnit})
+            <input
+              type="number"
+              min="0"
+              value={form.legPipeThickness || ''}
+              onChange={(e) =>
+                onFieldChange('legPipeThickness', e.target.value)
+              }
+              className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+            />
+          </label>
+        </div>
+      )}
+
+      {isHssProfile && (
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <label className="text-sm text-gray-600 dark:text-gray-300">
+            Ancho (b) ({lengthUnit})
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={form.legHssWidth || ''}
+              onChange={(e) => onFieldChange('legHssWidth', e.target.value)}
+              className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+            />
+          </label>
+          <label className="text-sm text-gray-600 dark:text-gray-300">
+            Profundidad (h) ({lengthUnit})
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={form.legHssDepth || ''}
+              onChange={(e) => onFieldChange('legHssDepth', e.target.value)}
+              className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+            />
+          </label>
+          <label className="text-sm text-gray-600 dark:text-gray-300">
+            Espesor de pared (t) ({lengthUnit})
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={form.legHssWallThickness || ''}
+              onChange={(e) =>
+                onFieldChange('legHssWallThickness', e.target.value)
+              }
+              className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+            />
+          </label>
+        </div>
+      )}
+
+      {isBeamProfile && (
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <label className="text-sm text-gray-600 dark:text-gray-300">
+            Profundidad de la viga (h) ({lengthUnit})
+            <input
+              type="number"
+              min="0"
+              value={form.legBeamDepth || ''}
+              onChange={(e) => onFieldChange('legBeamDepth', e.target.value)}
+              className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+            />
+          </label>
+          <label className="text-sm text-gray-600 dark:text-gray-300">
+            Ancho de brida (bf) ({lengthUnit})
+            <input
+              type="number"
+              min="0"
+              value={form.legBeamFlangeWidth || ''}
+              onChange={(e) =>
+                onFieldChange('legBeamFlangeWidth', e.target.value)
+              }
+              className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+            />
+          </label>
+          <label className="text-sm text-gray-600 dark:text-gray-300">
+            Espesor del alma (tw) ({lengthUnit})
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={form.legBeamWebThickness || ''}
+              onChange={(e) =>
+                onFieldChange('legBeamWebThickness', e.target.value)
+              }
+              className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+            />
+          </label>
+          <label className="text-sm text-gray-600 dark:text-gray-300">
+            Espesor de la brida (tf) ({lengthUnit})
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={form.legBeamFlangeThickness || ''}
+              onChange={(e) =>
+                onFieldChange('legBeamFlangeThickness', e.target.value)
+              }
+              className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+            />
+          </label>
+        </div>
+      )}
       {form && form.supportType && /arriostrada/i.test(form.supportType) && (
         <label className="text-sm text-gray-600 dark:text-gray-300">
-          Brace profile (e.g., L2x2x1/4)
+          Perfil del refuerzo (e.g., L2x2x1/4)
           <input
             type="text"
             value={form.braceProfile || ''}
@@ -156,7 +308,7 @@ const Legs: React.FC<{
       )}
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Leg length
+        Longitud de la pata ({lengthUnit})
         <input
           type="number"
           value={form.legLength || ''}
@@ -165,9 +317,22 @@ const Legs: React.FC<{
         />
       </label>
 
+      {isBracedLeg && (
+        <label className="text-sm text-gray-600 dark:text-gray-300">
+          Altura del refuerzo ({lengthUnit})
+          <input
+            type="number"
+            min="0"
+            value={form.bracingHeight || ''}
+            onChange={(e) => onFieldChange('bracingHeight', e.target.value)}
+            className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+          />
+        </label>
+      )}
+
       {form && form.supportType && /arriostrada/i.test(form.supportType) && (
         <label className="text-sm text-gray-600 dark:text-gray-300">
-          Bracing tier
+          Nivel de refuerzo
           <select
             value={form.bracingTier || '1'}
             onChange={(e) => onFieldChange('bracingTier', e.target.value)}
@@ -184,7 +349,7 @@ const Legs: React.FC<{
       {isLeg && (isSphere || isVertical) && (
         <>
           <label className="text-sm text-gray-600 dark:text-gray-300">
-            Base plate width
+            Ancho de la placa base ({lengthUnit})
             <input
               type="number"
               step="any"
@@ -197,7 +362,7 @@ const Legs: React.FC<{
           </label>
 
           <label className="text-sm text-gray-600 dark:text-gray-300">
-            Base plate length
+            Longitud de la placa base ({lengthUnit})
             <input
               type="number"
               step="any"
@@ -214,8 +379,38 @@ const Legs: React.FC<{
       <div>
         {isHorizontalLeg ? (
           <>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <label className="text-sm text-gray-600 dark:text-gray-300">
+                Ancho de la placa base (mm)
+                <input
+                  type="number"
+                  step="any"
+                  min="0"
+                  value={form.legBasePlateWidth || ''}
+                  onChange={(e) =>
+                    onFieldChange('legBasePlateWidth', e.target.value)
+                  }
+                  className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+                />
+              </label>
+
+              <label className="text-sm text-gray-600 dark:text-gray-300">
+                Largo de la placa base (mm)
+                <input
+                  type="number"
+                  step="any"
+                  min="0"
+                  value={form.legBasePlateLength || ''}
+                  onChange={(e) =>
+                    onFieldChange('legBasePlateLength', e.target.value)
+                  }
+                  className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+                />
+              </label>
+            </div>
+
             <label className="text-sm text-gray-600 dark:text-gray-300">
-              Longitudinal spacing
+              Espaciado longitudinal ({lengthUnit})
               <input
                 type="number"
                 step="any"
@@ -228,7 +423,7 @@ const Legs: React.FC<{
             </label>
 
             <label className="text-sm text-gray-600 dark:text-gray-300">
-              Transverse spacing
+              Espaciado transversal ({lengthUnit})
               <input
                 type="number"
                 step="any"
@@ -243,7 +438,7 @@ const Legs: React.FC<{
         ) : (
           <>
             <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-              <span>Bolt circle (Dbc)</span>
+              <span>Círculo de pernos (Dbc) ({lengthUnit})</span>
               <span
                 ref={tipRef}
                 onMouseEnter={() => setTipVisible(true)}
@@ -292,8 +487,8 @@ const Legs: React.FC<{
                 >
                   <Alert
                     variant="warning"
-                    title="Bolt circle smaller than sphere diameter"
-                    message="Bolt circle (Dbc) is smaller than the sphere diameter. For spherical vessels the bolt circle is typically larger; under-slung legs are unstable and not recommended."
+                    title="Círculo de pernos más pequeño que el diámetro de la esfera"
+                    message="El círculo de pernos (Dbc) es más pequeño que el diámetro de la esfera. Para recipientes esféricos, el círculo de pernos suele ser más grande; las patas colgantes son inestables y no se recomiendan."
                   />
                 </div>,
                 document.body,
@@ -312,15 +507,38 @@ const Legs: React.FC<{
                   }}
                 >
                   <div className="rounded-lg bg-white px-3 py-2 text-xs text-gray-700 shadow-sm dark:bg-[#1E2634] dark:text-white">
-                    For spherical vessels the bolt circle is typically larger
-                    than the sphere diameter — under-slung arrangements are
-                    unstable.
+                    Para recipientes esféricos, el círculo de pernos suele ser más grande
+                    que el diámetro de la esfera — las disposiciones colgantes son
+                    inestables.
                   </div>
                 </div>,
                 document.body,
               )}
           </>
         )}
+      </div>
+
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <label className="text-sm text-gray-600 dark:text-gray-300">
+          Diámetro del perno ({lengthUnit})
+          <input
+            type="number"
+            min="0"
+            value={form.legBoltDiameter || ''}
+            onChange={(e) => onFieldChange('legBoltDiameter', e.target.value)}
+            className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+          />
+        </label>
+        <label className="text-sm text-gray-600 dark:text-gray-300">
+          Pernos por pata
+          <input
+            type="number"
+            min="0"
+            value={form.legBoltPerLeg || ''}
+            onChange={(e) => onFieldChange('legBoltPerLeg', e.target.value)}
+            className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+          />
+        </label>
       </div>
     </div>
   );

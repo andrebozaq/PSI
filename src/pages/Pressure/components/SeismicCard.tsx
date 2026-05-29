@@ -6,7 +6,7 @@ const SeismicCard: React.FC<{
 }> = ({ form, handleInputChange }) => {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-      <h3 className="mb-3 text-sm font-semibold text-gray-800 dark:text-gray-100">
+      <h3 className="mb-3 text-sm font-semibold text-gray-800 dark:text-gray-100 border-b border-gray-200 pb-1 uppercase print:text-black print:border-black print:text-lg">
         Sismo
       </h3>
       <div className="space-y-2">
@@ -17,7 +17,7 @@ const SeismicCard: React.FC<{
               <select
                 value={form.seismicSiteClass}
                 onChange={handleInputChange('seismicSiteClass')}
-                className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 print:border-none print:bg-transparent print:p-0 print:h-auto print:font-bold print:text-black print:appearance-none"
               >
                 <option>A</option>
                 <option>B</option>
@@ -29,13 +29,14 @@ const SeismicCard: React.FC<{
             </label>
 
             <label className="text-sm text-gray-600 dark:text-gray-300">
-              Ss (short period)
+              Ss (período corto)
               <input
-                type="number"
-                step="any"
-                value={form.seismicSs}
-                onChange={handleInputChange('seismicSs')}
-                className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+              type="number"
+              min="0"
+              step="any"
+              value={form.seismicSs}
+              onChange={handleInputChange('seismicSs')}
+              className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100 print:border-none print:bg-transparent print:p-0 print:h-auto print:font-bold print:text-black"
               />
             </label>
 
@@ -43,10 +44,11 @@ const SeismicCard: React.FC<{
               S1 (1-sec period)
               <input
                 type="number"
+                min="0"
                 step="any"
                 value={form.seismicS1}
                 onChange={handleInputChange('seismicS1')}
-                className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+                className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100 print:border-none print:bg-transparent print:p-0 print:h-auto print:font-bold print:text-black"
               />
             </label>
 
@@ -57,7 +59,7 @@ const SeismicCard: React.FC<{
                 value={form.seismicR}
                 onChange={handleInputChange('seismicR')}
                 placeholder="(configurable según soporte)"
-                className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+                className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100 print:border-none print:bg-transparent print:p-0 print:h-auto print:font-bold print:text-black"
               />
             </label>
           </>
@@ -69,7 +71,7 @@ const SeismicCard: React.FC<{
                 type="text"
                 value={form.covenCity}
                 onChange={handleInputChange('covenCity')}
-                className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+                className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100 print:border-none print:bg-transparent print:p-0 print:h-auto print:font-bold print:text-black"
               />
             </label>
 
@@ -78,7 +80,7 @@ const SeismicCard: React.FC<{
               <select
                 value={form.covenState}
                 onChange={handleInputChange('covenState')}
-                className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 print:border-none print:bg-transparent print:p-0 print:h-auto print:font-bold print:text-black print:appearance-none"
               >
                 <option value="">Seleccione un estado</option>
                 <option>Amazonas</option>
@@ -114,12 +116,12 @@ const SeismicCard: React.FC<{
               <select
                 value={form.covenSoilType}
                 onChange={handleInputChange('covenSoilType')}
-                className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 print:border-none print:bg-transparent print:p-0 print:h-auto print:font-bold print:text-black print:appearance-none"
               >
-                <option>S1 (rock)</option>
-                <option>S2</option>
-                <option>S3</option>
-                <option>S4 (soft)</option>
+                <option>S1 (Roca)</option>
+                <option>S2 (Firmes)</option>
+                <option>S3 (Intermedios)</option>
+                <option>S4 (Muy blandos)</option>
               </select>
             </label>
 
@@ -128,9 +130,9 @@ const SeismicCard: React.FC<{
               <select
                 value={form.covenImportanceGroup}
                 onChange={handleInputChange('covenImportanceGroup')}
-                className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 print:border-none print:bg-transparent print:p-0 print:h-auto print:font-bold print:text-black print:appearance-none"
               >
-                <option>A (critical)</option>
+                <option>A (Crítico)</option>
                 <option>B1</option>
                 <option>B2</option>
               </select>
@@ -142,7 +144,7 @@ const SeismicCard: React.FC<{
                 type="text"
                 value={form.covenR}
                 onChange={handleInputChange('covenR')}
-                className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+                className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100 print:border-none print:bg-transparent print:p-0 print:h-auto print:font-bold print:text-black"
               />
             </label>
           </>

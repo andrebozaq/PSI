@@ -3,11 +3,15 @@ import React from 'react';
 const Lug: React.FC<{
   form: any;
   onFieldChange: (k: string, v: any) => void;
-}> = ({ form, onFieldChange }) => {
+  unitSystem?: 'SI' | 'US';
+  mode?: 'design' | 'analysis';
+}> = ({ form, onFieldChange, unitSystem = 'SI', mode = 'analysis' }) => {
+  void mode;
+  const lengthUnit = unitSystem === 'SI' ? 'mm' : 'in';
   return (
     <div className="space-y-2">
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Lug quantity
+        Cantidad de ménsulas
         <select
           value={form.lugQuantity || '2'}
           onChange={(e) => onFieldChange('lugQuantity', e.target.value)}
@@ -15,13 +19,15 @@ const Lug: React.FC<{
         >
           <option>2</option>
           <option>4</option>
+          <option>8</option>
         </select>
       </label>
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Lug elevation
+        Elevación de la ménsula ({lengthUnit})
         <input
           type="number"
+          min="0"
           value={form.lugElevation || ''}
           onChange={(e) => onFieldChange('lugElevation', e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
@@ -29,9 +35,10 @@ const Lug: React.FC<{
       </label>
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Lug width
+        Ancho de la ménsula ({lengthUnit})
         <input
           type="number"
+          min="0"
           value={form.lugWidth || ''}
           onChange={(e) => onFieldChange('lugWidth', e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
@@ -39,9 +46,10 @@ const Lug: React.FC<{
       </label>
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Lug length
+        Longitud de la ménsula ({lengthUnit})
         <input
           type="number"
+          min="0"
           value={form.lugLength || ''}
           onChange={(e) => onFieldChange('lugLength', e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
@@ -49,9 +57,10 @@ const Lug: React.FC<{
       </label>
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Lug thickness
+        Espesor de la ménsula ({lengthUnit})
         <input
           type="number"
+          min="0"
           value={form.lugThickness || ''}
           onChange={(e) => onFieldChange('lugThickness', e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
@@ -59,9 +68,10 @@ const Lug: React.FC<{
       </label>
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Eccentricity
+        Excentricidad ({lengthUnit})
         <input
           type="number"
+          min="0"
           value={form.lugEccentricity || ''}
           onChange={(e) => onFieldChange('lugEccentricity', e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
@@ -69,9 +79,10 @@ const Lug: React.FC<{
       </label>
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Hole diameter
+        Diámetro del agujero ({lengthUnit})
         <input
           type="number"
+          min="0"
           value={form.lugHoleDiameter || ''}
           onChange={(e) => onFieldChange('lugHoleDiameter', e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
@@ -79,7 +90,7 @@ const Lug: React.FC<{
       </label>
 
       <div className="text-sm text-gray-600 dark:text-gray-300">
-        <div className="mb-1">Stiffener gusset</div>
+        <div className="mb-1">Refuerzo de ménsula</div>
         <div className="inline-flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-900">
           <button
             type="button"
@@ -101,14 +112,14 @@ const Lug: React.FC<{
                 : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'
             }`}
           >
-            Yes
+            Sí
           </button>
         </div>
       </div>
 
       {form.lugGusset && (
         <label className="text-sm text-gray-600 dark:text-gray-300">
-          Gusset thickness
+          Espesor del refuerzo ({lengthUnit})
           <input
             type="number"
             value={form.lugGussetThickness || ''}
@@ -121,7 +132,7 @@ const Lug: React.FC<{
       )}
 
       <div className="text-sm text-gray-600 dark:text-gray-300">
-        <div className="mb-1">Pad plate</div>
+        <div className="mb-1">Placa de apoyo</div>
         <div className="inline-flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-900">
           <button
             type="button"
@@ -143,7 +154,7 @@ const Lug: React.FC<{
                 : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'
             }`}
           >
-            Yes
+            Sí
           </button>
         </div>
       </div>
@@ -151,7 +162,7 @@ const Lug: React.FC<{
       {form.lugPadPlate && (
         <>
           <label className="text-sm text-gray-600 dark:text-gray-300">
-            Pad plate width
+            Ancho de la placa de apoyo ({lengthUnit})
             <input
               type="number"
               value={form.lugPadWidth || ''}
@@ -161,7 +172,7 @@ const Lug: React.FC<{
           </label>
 
           <label className="text-sm text-gray-600 dark:text-gray-300">
-            Pad plate length
+            Longitud de la placa de apoyo ({lengthUnit})
             <input
               type="number"
               value={form.lugPadLength || ''}
@@ -171,7 +182,7 @@ const Lug: React.FC<{
           </label>
 
           <label className="text-sm text-gray-600 dark:text-gray-300">
-            Pad thickness
+            Espesor de la placa de apoyo ({lengthUnit})
             <input
               type="number"
               value={form.lugPadThickness || ''}

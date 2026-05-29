@@ -3,9 +3,8 @@ import DesignSupports from './pages/Pressure/DesignSupport';
 import AnalyticsBeams from './pages/Structural/AnalyticsBeams';
 import DesignWeld from './pages/Structural/DesignWeld';
 import AnalyticsWeld from './pages/Structural/AnalyticsWeld';
-import Crm from './pages/Pressure/Crm';
-import Marketing from './pages/Pressure/Marketing';
 import AnalyticsSupports from './pages/Pressure/AnalyticsSupports';
+import AnalysisDashboard from './pages/Pressure/AnalysisDashboard';
 import SignIn from './pages/AuthPages/SignIn';
 import SignUp from './pages/AuthPages/SignUp';
 import NotFound from './pages/OtherPage/NotFound';
@@ -61,30 +60,38 @@ import Success from './pages/OtherPage/Success';
 import AppLayout from './layout/AppLayout';
 import { ScrollToTop } from './components/common/ScrollToTop';
 import TaskList from './pages/Task/TaskList';
-import Saas from './pages/Pressure/Saas';
+// import Saas from './pages/Pressure/Saas';
 import Home from './pages/Home';
+import Conversor from './pages/Conversor';
 
 export default function App() {
   return (
     <>
       <Router>
         <ScrollToTop />
-        <Routes>
+        <div className="flex min-h-screen flex-col">
+          <div className="flex-1">
+            <Routes>
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
             <Route index path="/inicio" element={<Home />} />
             <Route path="/soporte-analisis" element={<AnalyticsSupports />} />
+            <Route
+              path="/soporte-analisis-editor"
+              element={<AnalysisDashboard />}
+            />
             <Route path="/soporte-diseno" element={<DesignSupports />} />
             <Route path="/recipientes-analisis" element={<Vessels />} />
             <Route path="/vigas-analisis" element={<AnalyticsBeams />} />
-            <Route path="/soldadura-diseno" element={<AnalyticsWeld />} />
-            <Route path="/soldadura-analisis" element={<DesignWeld />} />
+            <Route path="/soldadura-diseno" element={<DesignWeld />} />
+            <Route path="/soldadura-analisis" element={<AnalyticsWeld />} />
 
             {/* Others Page */}
             <Route path="/perfil" element={<UserProfiles />} />
             <Route path="/calendario" element={<Calendar />} />
+            <Route path="/conversor" element={<Conversor />} />
             <Route path="/" element={<Home />} />
-            <Route path="/invoice" element={<Invoices />} />
+            <Route path="/documentacion" element={<Invoices />} />
             <Route path="/faq" element={<Faqs />} />
             <Route path="/pricing-tables" element={<PricingTables />} />
             <Route path="/blank" element={<Blank />} />
@@ -155,7 +162,13 @@ export default function App() {
           <Route path="/five-zero-zero" element={<FiveZeroZero />} />
           <Route path="/four-zero-three" element={<FiveZeroThree />} />
           <Route path="/proximamente" element={<ComingSoon />} />
-        </Routes>
+            </Routes>
+          </div>
+
+          <footer className="border-t border-gray-200 px-4 py-4 text-center text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400">
+            © 2026 - Incsane, EIM, La Universidad del Zulia
+          </footer>
+        </div>
       </Router>
     </>
   );

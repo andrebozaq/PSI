@@ -3,21 +3,25 @@ import React from 'react';
 const RingSupport: React.FC<{
   form: any;
   onFieldChange: (k: string, v: any) => void;
-}> = ({ form, onFieldChange }) => {
+  unitSystem?: 'SI' | 'US';
+  mode?: 'design' | 'analysis';
+}> = ({ form, onFieldChange, unitSystem = 'SI', mode = 'analysis' }) => {
+  void mode;
+  const lengthUnit = unitSystem === 'SI' ? 'mm' : 'in';
   const elevationLabel =
     form && form.vesselType === 'Horizontal' && /Ring/i.test(form.supportType)
-      ? 'Distance from Head Weld'
-      : 'Ring elevation';
+      ? 'Distancia desde la soldadura del cabezal'
+      : 'Elevación del anillo';
 
   const boltLabel =
     form && form.vesselType === 'Horizontal' && /Ring/i.test(form.supportType)
-      ? 'Anchor span (transverse)'
-      : 'Bolt circle';
+      ? 'Tramo de anclaje (transversal)'
+      : 'Círculo de pernos';
 
   return (
     <div className="space-y-2">
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        {elevationLabel}
+        {elevationLabel} ({lengthUnit})
         <input
           type="number"
           value={form.ringElevation || ''}
@@ -29,8 +33,8 @@ const RingSupport: React.FC<{
       {form &&
         form.vesselType === 'Horizontal' &&
         /Ring/i.test(form.supportType) && (
-          <label className="text-sm text-gray-600 dark:text-gray-300">
-            Support Height
+            <label className="text-sm text-gray-600 dark:text-gray-300">
+            Altura del soporte ({lengthUnit})
             <input
               type="number"
               value={form.ringSupportHeight || ''}
@@ -43,89 +47,92 @@ const RingSupport: React.FC<{
         )}
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Ring profile type
+        Tipo de perfil del anillo
         <select
           value={form.ringProfile || ''}
           onChange={(e) => onFieldChange('ringProfile', e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         >
-          <option>Type A</option>
-          <option>Type B</option>
+          <option>Barra</option>
+          <option>Viga I</option>
+          <option>Sección T</option>
         </select>
       </label>
 
-      <label className="text-sm text-gray-600 dark:text-gray-300">
-        Ring OD
-        <input
-          type="number"
-          value={form.ringOD || ''}
-          onChange={(e) => onFieldChange('ringOD', e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
-        />
-      </label>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <label className="text-sm text-gray-600 dark:text-gray-300">
+          Ancho de la placa base ({lengthUnit})
+          <input
+            type="number"
+            min="0"
+            value={form.ringBasePlateWidth || ''}
+            onChange={(e) =>
+              onFieldChange('ringBasePlateWidth', e.target.value)
+            }
+            className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+          />
+        </label>
+        <label className="text-sm text-gray-600 dark:text-gray-300">
+          Largo de la placa base ({lengthUnit})
+          <input
+            type="number"
+            min="0"
+            value={form.ringBasePlateLength || ''}
+            onChange={(e) =>
+              onFieldChange('ringBasePlateLength', e.target.value)
+            }
+            className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+          />
+        </label>
+      </div>
 
-      <label className="text-sm text-gray-600 dark:text-gray-300">
-        Ring ID
-        <input
-          type="number"
-          value={form.ringID || ''}
-          onChange={(e) => onFieldChange('ringID', e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
-        />
-      </label>
-
-      <label className="text-sm text-gray-600 dark:text-gray-300">
-        Hole type
-        <input
-          type="text"
-          value={form.ringHoleType || ''}
-          onChange={(e) => onFieldChange('ringHoleType', e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
-        />
-      </label>
-
-      <label className="text-sm text-gray-600 dark:text-gray-300">
-        Web height
-        <input
-          type="number"
-          value={form.ringWebHeight || ''}
-          onChange={(e) => onFieldChange('ringWebHeight', e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
-        />
-      </label>
-
-      <label className="text-sm text-gray-600 dark:text-gray-300">
-        Web thickness
-        <input
-          type="number"
-          value={form.ringWebThickness || ''}
-          onChange={(e) => onFieldChange('ringWebThickness', e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
-        />
-      </label>
-
-      <label className="text-sm text-gray-600 dark:text-gray-300">
-        Flange width
-        <input
-          type="number"
-          value={form.ringFlangeWidth || ''}
-          onChange={(e) => onFieldChange('ringFlangeWidth', e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
-        />
-      </label>
-
-      <label className="text-sm text-gray-600 dark:text-gray-300">
-        Flange thickness
-        <input
-          type="number"
-          value={form.ringFlangeThickness || ''}
-          onChange={(e) => onFieldChange('ringFlangeThickness', e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
-        />
-      </label>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <label className="text-sm text-gray-600 dark:text-gray-300">
+          Altura del alma ({lengthUnit})
+          <input
+            type="number"
+            min="0"
+            value={form.ringWebHeight || ''}
+            onChange={(e) => onFieldChange('ringWebHeight', e.target.value)}
+            className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+          />
+        </label>
+        <label className="text-sm text-gray-600 dark:text-gray-300">
+          Espesor del alma ({lengthUnit})
+          <input
+            type="number"
+            min="0"
+            value={form.ringWebThickness || ''}
+            onChange={(e) => onFieldChange('ringWebThickness', e.target.value)}
+            className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+          />
+        </label>
+        <label className="text-sm text-gray-600 dark:text-gray-300">
+          Ancho de la brida ({lengthUnit})
+          <input
+            type="number"
+            min="0"
+            value={form.ringFlangeWidth || ''}
+            onChange={(e) => onFieldChange('ringFlangeWidth', e.target.value)}
+            className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+          />
+        </label>
+        <label className="text-sm text-gray-600 dark:text-gray-300">
+          Espesor de la brida ({lengthUnit})
+          <input
+            type="number"
+            min="0"
+            value={form.ringFlangeThickness || ''}
+            onChange={(e) =>
+              onFieldChange('ringFlangeThickness', e.target.value)
+            }
+            className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+          />
+        </label>
+      </div>
 
       <div className="text-sm text-gray-600 dark:text-gray-300">
-        <div className="mb-1">Gussets</div>
+        <div className="mb-1">Refuerzos</div>
         <div className="inline-flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-900">
           <button
             type="button"
@@ -147,7 +154,7 @@ const RingSupport: React.FC<{
                 : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'
             }`}
           >
-            Yes
+            Sí
           </button>
         </div>
       </div>
@@ -155,7 +162,7 @@ const RingSupport: React.FC<{
       {form.ringGussets && (
         <>
           <label className="text-sm text-gray-600 dark:text-gray-300">
-            Quantity of gussets
+            Cantidad de refuerzos
             <input
               type="number"
               value={form.ringGussetQty || ''}
@@ -165,7 +172,7 @@ const RingSupport: React.FC<{
           </label>
 
           <label className="text-sm text-gray-600 dark:text-gray-300">
-            Gusset thickness
+            Espesor del refuerzo ({lengthUnit})
             <input
               type="number"
               value={form.ringGussetThickness || ''}
@@ -177,7 +184,7 @@ const RingSupport: React.FC<{
           </label>
 
           <label className="text-sm text-gray-600 dark:text-gray-300">
-            Gusset width
+            Ancho del refuerzo ({lengthUnit})
             <input
               type="number"
               value={form.ringGussetWidth || ''}
@@ -189,7 +196,7 @@ const RingSupport: React.FC<{
       )}
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        {boltLabel}
+        {boltLabel} ({lengthUnit})
         <input
           type="number"
           value={form.ringBoltCircle || ''}

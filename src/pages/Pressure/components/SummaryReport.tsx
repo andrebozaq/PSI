@@ -1,22 +1,314 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import ComponentCard from '../../../components/common/ComponentCard';
 import Alert from '../../../components/ui/alert/Alert';
+import {
+  BlockResults,
+  FinalDesignResults,
+  LightweightResults,
+} from '../supports/DesignCalculations/Constants';
 
 type Props = {
   form: any;
   unitSystem: 'SI' | 'US';
+  lightweight: LightweightResults;
+  block: BlockResults;
+  final: FinalDesignResults;
 };
 
 const unitLabels = {
   pressure: { SI: 'MPa', US: 'psi' },
   temperature: { SI: '°C', US: '°F' },
   length: { SI: 'mm', US: 'in' },
+  force: { SI: 'kN', US: 'kips' },
+  area: { SI: 'mm²', US: 'in²' },
+  section: { SI: 'mm³', US: 'in³' },
+  moment: { SI: 'kN·m', US: 'kip·ft' },
 };
 
-export default function SummaryReport({ form, unitSystem }: Props) {
+export default function SummaryReport({
+  form,
+  unitSystem,
+  lightweight,
+  block,
+  final,
+}: Props) {
+  /**
+  * Objetivo: renderizar el reporte final del wizard de soporte.
+  * Entradas: formulario, unidad activa y snapshot de resultados (`lightweight`, `block`, `final`).
+  * Salida: vista consolidada con panel en vivo, tablas de diseño y observaciones imprimibles.
+  * Norma/Criterio: representación visual de estados `Cumple/No cumple/Revisar/Pendiente`.
+   */
   const printRef = useRef<HTMLDivElement | null>(null);
+  const lengthUnit = unitLabels.length[unitSystem];
+  const pressureUnit = unitLabels.pressure[unitSystem];
+  const forceUnit = unitLabels.force[unitSystem];
+  const areaUnit = unitLabels.area[unitSystem];
+  const sectionUnit = unitLabels.section[unitSystem];
+  const momentUnit = unitLabels.moment[unitSystem];
+  const isSkirt = /^Skirt/i.test(form.supportType || '');
+  const isLeg = /^Leg/i.test(form.supportType || '');
+  const isLug = /^Lug/i.test(form.supportType || '');
+  const isRing = /^Ring/i.test(form.supportType || '');
+  const isSaddle = /Saddle/i.test(form.supportType || '');
+  const hasAnchoring =
+    Number(form.boltQuantity || form.anchorBoltQuantity || form.skirtAnchorBoltCount || 0) > 0 ||
+    Number(
+      form.boltDiameter ||
+        form.anchorBoltDiameter ||
+        form.legBoltDiameter ||
+        form.skirtAnchorBoltDiameter ||
+        0,
+    ) > 0;
+  const boltUnitText = unitSystem === 'US' ? '1 pulgada' : '25 mm';
+  const derived = lightweight.derived;
+  const blockValues = block.values;
+
+  const formatDerived = (value: unknown) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return '-';
+    return Number.isInteger(numeric) ? `${numeric}` : numeric.toFixed(2);
+  };
+
+  const formatLengthFromMm = (value: unknown) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return '-';
+    const converted = unitSystem === 'US' ? numeric / 25.4 : numeric;
+    return Number.isInteger(converted)
+      ? `${converted}`
+      : converted.toFixed(2);
+  };
+
+  const formatForceFromkN = (value: unknown) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return '-';
+    const converted = unitSystem === 'US' ? numeric * 0.2248089431 : numeric;
+    return Number.isInteger(converted) ? `${converted}` : converted.toFixed(2);
+  };
+
+  const formatStressFromMPa = (value: unknown) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return '-';
+    const converted = unitSystem === 'US' ? numeric * 145.037738 : numeric;
+    return Number.isInteger(converted) ? `${converted}` : converted.toFixed(2);
+  };
+
+  const formatAreaFromMm2 = (value: unknown) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return '-';
+    const converted = unitSystem === 'US' ? numeric / 645.16 : numeric;
+    return Number.isInteger(converted) ? `${converted}` : converted.toFixed(2);
+  };
+
+  const formatSectionFromMm3 = (value: unknown) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return '-';
+    const converted = unitSystem === 'US' ? numeric / 16387.064 : numeric;
+    return Number.isInteger(converted) ? `${converted}` : converted.toFixed(2);
+  };
+
+  const formatMomentFromkNm = (value: unknown) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return '-';
+    const converted = unitSystem === 'US' ? numeric * 0.7375621493 : numeric;
+    return Number.isInteger(converted) ? `${converted}` : converted.toFixed(2);
+  };
+
+  const getStatusClassName = (status: unknown) => {
+    /**
+     * Objetivo: convertir estado textual a estilo visual de cumplimiento.
+     * Entradas: estado de verificación (`Cumple`, `No cumple`, `Revisar`, `Pendiente`).
+     * Salida: clases CSS de color/peso para tabla y alertas.
+     * Norma/Criterio: semáforo de estado (verde, rojo, ámbar, neutro).
+     */
+    const normalized = String(status ?? '').trim().toLowerCase();
+    if (normalized === 'cumple') {
+      return 'font-semibold text-green-700 dark:text-green-400';
+    }
+    if (normalized === 'no cumple') {
+      return 'font-semibold text-red-700 dark:text-red-400';
+    }
+    if (normalized === 'revisar' || normalized === 'pendiente') {
+      return 'font-semibold text-amber-700 dark:text-amber-400';
+    }
+    return 'font-medium text-gray-700 dark:text-gray-300';
+  };
+
+  const recommendedDimensionsRows = final.recommendedDimensions.length
+    ? final.recommendedDimensions
+    : isSkirt
+    ? [
+        {
+          parameter: 'Espesor Mínimo del Faldón (t)',
+          value: `Pendiente de cálculo (ej.: 10.5 ${lengthUnit})`,
+        },
+        {
+          parameter: 'Espesor Mínimo del Anillo Base',
+          value: `Pendiente de cálculo (ej.: 25.0 ${lengthUnit})`,
+        },
+        {
+          parameter: 'Ancho Mínimo del Anillo Base',
+          value: `Pendiente de cálculo (ej.: 200 ${lengthUnit})`,
+        },
+        {
+          parameter: 'Criterio Sísmico (Tensión)',
+          value: 'Pendiente de cálculo (Pernos Requeridos / No Requeridos)',
+        },
+        {
+          parameter: 'Anclaje',
+          value: `Pendiente de cálculo (ej.: 12 pernos de ${boltUnitText})`,
+        },
+      ]
+    : [
+        {
+          parameter: 'Dimensiones mínimas recomendadas del soporte',
+          value: 'Pendiente de cálculo',
+        },
+        {
+          parameter: 'Criterio sísmico (tensión)',
+          value: 'Pendiente de cálculo (Pernos Requeridos / No Requeridos)',
+        },
+        {
+          parameter: 'Anclaje recomendado',
+          value: 'Pendiente de cálculo',
+        },
+      ];
+
+  const calculationVerificationRows = final.verificationRows.length
+    ? final.verificationRows
+    : [
+        {
+          check: 'Carga axial',
+          actual: 'Pendiente de cálculo',
+          allowable: 'Pendiente de cálculo',
+          status: 'Pendiente',
+        },
+        {
+          check: 'Momento por viento',
+          actual: 'Pendiente de cálculo',
+          allowable: 'Pendiente de cálculo',
+          status: 'Pendiente',
+        },
+        {
+          check: 'Momento por sismo',
+          actual: 'Pendiente de cálculo',
+          allowable: 'Pendiente de cálculo',
+          status: 'Pendiente',
+        },
+        {
+          check: 'Tracción en pernos',
+          actual: 'Pendiente de cálculo',
+          allowable: 'Pendiente de cálculo',
+          status: 'Pendiente',
+        },
+      ];
+
+  const normalizedStatuses = calculationVerificationRows.map((row) =>
+    String(row.status ?? '').trim().toLowerCase(),
+  );
+  const hasNoCumple = normalizedStatuses.includes('no cumple');
+  const hasReviewPending = normalizedStatuses.some(
+    (status) => status === 'revisar' || status === 'pendiente',
+  );
+
+  const failedChecks = calculationVerificationRows
+    .slice()
+    .sort((a, b) => {
+      const getPriority = (check: string) => {
+        const text = String(check ?? '').toLowerCase();
+        if (text.includes('anclaje acero')) return 1;
+        if (text.includes('anclaje concreto')) return 2;
+        if (text.includes('distancia al borde')) return 3;
+        if (text.includes('levantamiento')) return 4;
+        if (text.includes('pandeo')) return 5;
+        if (text.includes('flexión') || text.includes('flexion')) return 6;
+        if (text.includes('compresión') || text.includes('compresion')) return 7;
+        if (text.includes('presión') || text.includes('presion')) return 8;
+        if (text.includes('corte')) return 9;
+        return 99;
+      };
+      return getPriority(a.check) - getPriority(b.check);
+    })
+    .filter((row) => String(row.status ?? '').trim().toLowerCase() === 'no cumple')
+    .map((row) => row.check)
+    .slice(0, 3);
+
+  const reviewChecks = calculationVerificationRows
+    .slice()
+    .sort((a, b) => {
+      const getPriority = (check: string) => {
+        const text = String(check ?? '').toLowerCase();
+        if (text.includes('anclaje acero')) return 1;
+        if (text.includes('anclaje concreto')) return 2;
+        if (text.includes('distancia al borde')) return 3;
+        if (text.includes('levantamiento')) return 4;
+        if (text.includes('pandeo')) return 5;
+        if (text.includes('flexión') || text.includes('flexion')) return 6;
+        if (text.includes('compresión') || text.includes('compresion')) return 7;
+        if (text.includes('presión') || text.includes('presion')) return 8;
+        if (text.includes('corte')) return 9;
+        return 99;
+      };
+      return getPriority(a.check) - getPriority(b.check);
+    })
+    .filter((row) => {
+      const status = String(row.status ?? '').trim().toLowerCase();
+      return status === 'revisar' || status === 'pendiente';
+    })
+    .map((row) => row.check)
+    .slice(0, 3);
+
+  const failedSuffix = failedChecks.length
+    ? ` Verificaciones críticas: ${failedChecks.join(', ')}${calculationVerificationRows.filter((row) => String(row.status ?? '').trim().toLowerCase() === 'no cumple').length > failedChecks.length ? ', ...' : ''}.`
+    : '';
+
+  const reviewSuffix = reviewChecks.length
+    ? ` Áreas a revisar: ${reviewChecks.join(', ')}${calculationVerificationRows.filter((row) => {
+        const status = String(row.status ?? '').trim().toLowerCase();
+        return status === 'revisar' || status === 'pendiente';
+      }).length > reviewChecks.length ? ', ...' : ''}.`
+    : '';
+
+  const MAX_NOTES_VISIBLE = 8;
+  const MAX_NOTE_CHARS = 180;
+  const compactNote = (text: string) => {
+    const normalized = String(text ?? '').replace(/\s+/g, ' ').trim();
+    if (normalized.length <= MAX_NOTE_CHARS) return normalized;
+    return `${normalized.slice(0, MAX_NOTE_CHARS - 1)}…`;
+  };
+  const displayedNotes = final.notes.slice(0, MAX_NOTES_VISIBLE).map(compactNote);
+  const hiddenNotesCount = Math.max(0, final.notes.length - displayedNotes.length);
+
+  const summaryAlert: {
+    variant: 'success' | 'error' | 'warning' | 'info';
+    title: string;
+    message: string;
+  } = hasNoCumple
+    ? {
+        variant: 'error',
+        title: 'Verificación de diseño',
+        message:
+          `Se detectaron verificaciones en estado NO CUMPLE. Revise los parámetros marcados en rojo.${failedSuffix}`,
+      }
+    : hasReviewPending
+      ? {
+          variant: 'warning',
+          title: 'Verificación de diseño',
+          message:
+            `El diseño requiere revisión adicional antes de aprobarse (filas en ámbar).${reviewSuffix}`,
+        }
+      : {
+          variant: 'success',
+          title: 'Verificación de diseño',
+          message: 'Tu diseño pasó exitosamente.',
+        };
 
   const handlePrint = () => {
+    /**
+     * Objetivo: imprimir/exportar el resumen visible del reporte.
+     * Entradas: referencia del contenedor de impresión (`printRef`).
+     * Salida: ventana imprimible con HTML y estilos actuales.
+     * Norma/Criterio: mantiene fidelidad visual para revisión documental.
+     */
     const el = printRef.current;
     if (!el) return window.print();
     const printWindow = window.open('', '_blank', 'width=900,height=700');
@@ -52,9 +344,9 @@ export default function SummaryReport({ form, unitSystem }: Props) {
 
       <div ref={printRef} id="summary-print-area">
         <Alert
-          variant="success"
-          title="Design check"
-          message="Your design passed successfully."
+          variant={summaryAlert.variant}
+          title={summaryAlert.title}
+          message={summaryAlert.message}
         />
 
         <div className="mt-4 space-y-4">
@@ -92,14 +384,14 @@ export default function SummaryReport({ form, unitSystem }: Props) {
             </div>
           </ComponentCard>
 
-          <ComponentCard title="Geometry & Weight">
+          <ComponentCard title="Geometría y peso">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 text-sm text-gray-700 dark:text-gray-300">
               <div>
-                <div className="font-medium">Outer Diameter</div>
+                <div className="font-medium">Diámetro exterior</div>
                 <div>{form.outerDiameter || '-'}</div>
               </div>
               <div>
-                <div className="font-medium">Length / Height</div>
+                <div className="font-medium">Longitud / Altura</div>
                 <div>{form.length || form.height || '-'}</div>
               </div>
               <div>
@@ -107,16 +399,16 @@ export default function SummaryReport({ form, unitSystem }: Props) {
                 <div>{form.vesselMaterial || '-'}</div>
               </div>
               <div>
-                <div className="font-medium">Wall thickness</div>
+                <div className="font-medium">Espesor de pared</div>
                 <div>{form.wallThickness || '-'}</div>
               </div>
             </div>
           </ComponentCard>
 
-          <ComponentCard title="Wind & Seismic">
+          <ComponentCard title="Viento y Sísmico">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 text-sm text-gray-700 dark:text-gray-300">
               <div>
-                <div className="font-medium">Wind</div>
+                <div className="font-medium">Viento</div>
                 <div>
                   {form.windAuto
                     ? `${form.windAuto} (${form.windValue || '-'})`
@@ -124,29 +416,436 @@ export default function SummaryReport({ form, unitSystem }: Props) {
                 </div>
               </div>
               <div>
-                <div className="font-medium">Seismic</div>
+                <div className="font-medium">Sísmico</div>
                 <div>
                   {form.designCode === 'COVENIN'
                     ? `${form.covenCity || '-'}, ${form.covenState || '-'} (${form.covenSoilType || '-'})`
-                    : `Site class: ${form.seismicSiteClass || '-'} Ss: ${form.seismicSs || '-'} S1: ${form.seismicS1 || '-'}`}
+                    : `Clase de sitio: ${form.seismicSiteClass || '-'} Ss: ${form.seismicSs || '-'} S1: ${form.seismicS1 || '-'}`}
                 </div>
               </div>
             </div>
           </ComponentCard>
 
-          <ComponentCard title="Support configuration">
+          <ComponentCard
+            title={
+              isSaddle
+                ? 'Resultados en vivo — Silletas'
+                : isSkirt
+                  ? 'Resultados en vivo — Faldón'
+                  : isLug
+                    ? 'Resultados en vivo — Ménsulas'
+                    : isRing
+                      ? 'Resultados en vivo — Anillo'
+                  : 'Resultados en vivo — Cargas y patas'
+            }
+          >
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 text-sm text-gray-700 dark:text-gray-300">
+              <div>
+                <div className="font-medium">Carga gobernante ambiental</div>
+                <div>{String(derived.cargaGobernante_Ambiental || '-')}</div>
+              </div>
+              <div>
+                <div className="font-medium">Momento gobernante ({momentUnit})</div>
+                <div>{formatMomentFromkNm(derived.momentoGobernante_kNm)}</div>
+              </div>
+              <div>
+                <div className="font-medium">Coeficiente sísmico Cs</div>
+                <div>{formatDerived(derived.coeficienteSismico_Cs)}</div>
+              </div>
+              {isSaddle ? (
+                <>
+                  <div>
+                    <div className="font-medium">Esfuerzo cuerno S4 ({pressureUnit})</div>
+                    <div>{formatStressFromMPa(derived.saddle_esfuerzoCuerno_MPa)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Flexión en silleta S1 ({pressureUnit})</div>
+                    <div>{formatStressFromMPa(derived.saddle_esfuerzoFlexionSilleta_MPa)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Flexión en centro S2 ({pressureUnit})</div>
+                    <div>{formatStressFromMPa(derived.saddle_esfuerzoFlexionCentro_MPa)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Compresión en silleta ({pressureUnit})</div>
+                    <div>{formatStressFromMPa(derived.saddle_esfuerzoCompresionSilleta_MPa)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Alerta de cuerno</div>
+                    <div className={derived.saddle_alertaCuerno ? 'font-semibold text-red-600 dark:text-red-400' : 'font-medium text-green-600 dark:text-green-400'}>
+                      {derived.saddle_alertaCuerno ? 'ACTIVA' : 'NO'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Alerta de flexión</div>
+                    <div className={derived.saddle_alertaFlexion ? 'font-semibold text-red-600 dark:text-red-400' : 'font-medium text-green-600 dark:text-green-400'}>
+                      {derived.saddle_alertaFlexion ? 'ACTIVA' : 'NO'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Alerta de compresión silleta</div>
+                    <div className={derived.saddle_alertaSilleta ? 'font-semibold text-red-600 dark:text-red-400' : 'font-medium text-green-600 dark:text-green-400'}>
+                      {derived.saddle_alertaSilleta ? 'ACTIVA' : 'NO'}
+                    </div>
+                  </div>
+                </>
+              ) : isSkirt ? (
+                <>
+                  <div>
+                    <div className="font-medium">Compresión en faldón ({pressureUnit})</div>
+                    <div>{formatStressFromMPa(derived.skirt_esfuerzoCompresionFaldon_MPa)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Tensión en faldón ({pressureUnit})</div>
+                    <div>{formatStressFromMPa(derived.skirt_esfuerzoTensionFaldon_MPa)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Presión en concreto ({pressureUnit})</div>
+                    <div>{formatStressFromMPa(derived.skirt_presionConcreto_MPa)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Tracción por perno ({forceUnit})</div>
+                    <div>{formatForceFromkN(derived.skirt_tensionMaxPerno_kN)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Esfuerzo placa silla ({pressureUnit})</div>
+                    <div>{formatStressFromMPa(derived.skirt_esfuerzoPlacaSilla_MPa)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Alerta pandeo faldón</div>
+                    <div className={derived.skirt_alertaPandeoFaldon ? 'font-semibold text-red-600 dark:text-red-400' : 'font-medium text-green-600 dark:text-green-400'}>
+                      {derived.skirt_alertaPandeoFaldon ? 'ACTIVA' : 'NO'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Alerta levantamiento</div>
+                    <div className={derived.skirt_alertaLevantamientoFaldon ? 'font-semibold text-red-600 dark:text-red-400' : 'font-medium text-green-600 dark:text-green-400'}>
+                      {derived.skirt_alertaLevantamientoFaldon ? 'ACTIVA' : 'NO'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Alerta agujero acceso</div>
+                    <div className={derived.skirt_alertaAgujeroAcceso ? 'font-semibold text-red-600 dark:text-red-400' : 'font-medium text-green-600 dark:text-green-400'}>
+                      {derived.skirt_alertaAgujeroAcceso ? 'ACTIVA' : 'NO'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Alerta silla de anclaje</div>
+                    <div className={derived.skirt_alertaSillaAnclaje ? 'font-semibold text-red-600 dark:text-red-400' : 'font-medium text-green-600 dark:text-green-400'}>
+                      {derived.skirt_alertaSillaAnclaje ? 'ACTIVA' : 'NO'}
+                    </div>
+                  </div>
+                </>
+              ) : isLug ? (
+                <>
+                  <div>
+                    <div className="font-medium">Carga por ménsula ({forceUnit})</div>
+                    <div>{formatForceFromkN(derived.lug_cargaMaxPorMensula_kN)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Flexión en ménsula ({pressureUnit})</div>
+                    <div>{formatStressFromMPa(derived.lug_esfuerzoFlexionMensula_MPa)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Corte en ménsula ({pressureUnit})</div>
+                    <div>{formatStressFromMPa(derived.lug_esfuerzoCorteMensula_MPa)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Presión en Pad Plate ({pressureUnit})</div>
+                    <div>{formatStressFromMPa(derived.lug_presionPlacaApoyo_MPa)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Alerta flexión ménsula</div>
+                    <div className={derived.lug_alertaFlexionMensula ? 'font-semibold text-red-600 dark:text-red-400' : 'font-medium text-green-600 dark:text-green-400'}>
+                      {derived.lug_alertaFlexionMensula ? 'ACTIVA' : 'NO'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Alerta falta Pad Plate</div>
+                    <div className={derived.lug_alertaFaltaPlaca ? 'font-semibold text-red-600 dark:text-red-400' : 'font-medium text-green-600 dark:text-green-400'}>
+                      {derived.lug_alertaFaltaPlaca ? 'ACTIVA' : 'NO'}
+                    </div>
+                  </div>
+                </>
+              ) : isRing ? (
+                <>
+                  <div>
+                    <div className="font-medium">Área de sección ({areaUnit})</div>
+                    <div>{formatAreaFromMm2(derived.ring_areaSeccion_mm2)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Módulo de sección ({sectionUnit})</div>
+                    <div>{formatSectionFromMm3(derived.ring_moduloSeccion_mm3)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Flexión en anillo ({pressureUnit})</div>
+                    <div>{formatStressFromMPa(derived.ring_esfuerzoFlexionAnillo_MPa)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Corte en anillo ({pressureUnit})</div>
+                    <div>{formatStressFromMPa(derived.ring_esfuerzoCorteAnillo_MPa)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Presión placa base ({pressureUnit})</div>
+                    <div>{formatStressFromMPa(derived.ring_presionPlacaBase_MPa)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Alerta flexión anillo</div>
+                    <div className={derived.ring_alertaFlexion ? 'font-semibold text-red-600 dark:text-red-400' : 'font-medium text-green-600 dark:text-green-400'}>
+                      {derived.ring_alertaFlexion ? 'ACTIVA' : 'NO'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Alerta presión base</div>
+                    <div className={derived.ring_alertaPresionBase ? 'font-semibold text-red-600 dark:text-red-400' : 'font-medium text-green-600 dark:text-green-400'}>
+                      {derived.ring_alertaPresionBase ? 'ACTIVA' : 'NO'}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <div className="font-medium">Compresión máxima por pata ({forceUnit})</div>
+                    <div>{formatForceFromkN(derived.leg_compresionMaxima_kN)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Tensión máxima por pata ({forceUnit})</div>
+                    <div>{formatForceFromkN(derived.leg_tensionMaxima_kN)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Corte por pata ({forceUnit})</div>
+                    <div>{formatForceFromkN(derived.leg_cortePorPata_kN)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Alerta de levantamiento</div>
+                    <div
+                      className={
+                        derived.leg_alertaLevantamiento
+                          ? 'font-semibold text-red-600 dark:text-red-400'
+                          : 'font-medium text-green-600 dark:text-green-400'
+                      }
+                    >
+                      {derived.leg_alertaLevantamiento ? 'ACTIVA' : 'NO'}
+                    </div>
+                  </div>
+                  {isLeg && (
+                    <>
+                      <div>
+                        <div className="font-medium">Pata arriostrada</div>
+                        <div>{blockValues.isBraced ? 'SÍ' : 'NO'}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium">Niveles de refuerzo</div>
+                        <div>{formatDerived(blockValues.braceLevels)}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium">
+                          Longitud efectiva de pandeo ({lengthUnit})
+                        </div>
+                        <div>{formatLengthFromMm(blockValues.leg_longitudEfectiva_mm)}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium">Esbeltez KL/r</div>
+                        <div>{formatDerived(blockValues.leg_esbeltez)}</div>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+              {hasAnchoring && (
+                <>
+                  <div className="md:col-span-2 mt-2 border-t border-gray-200 pt-3 dark:border-gray-700">
+                    <div className="font-semibold text-gray-800 dark:text-gray-100">Anclaje (AISC + ACI)</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Ratio interacción acero (T+V)</div>
+                    <div>{formatDerived(derived.anchor_ratioInteraccionAcero)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Ratio breakout concreto</div>
+                    <div>{formatDerived(derived.anchor_ratioConcreto)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Alerta acero</div>
+                    <div className={derived.anchor_alertaAcero ? 'font-semibold text-red-600 dark:text-red-400' : 'font-medium text-green-600 dark:text-green-400'}>
+                      {derived.anchor_alertaAcero ? 'ACTIVA' : 'NO'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Alerta concreto</div>
+                    <div className={derived.anchor_alertaConcreto ? 'font-semibold text-red-600 dark:text-red-400' : 'font-medium text-green-600 dark:text-green-400'}>
+                      {derived.anchor_alertaConcreto ? 'ACTIVA' : 'NO'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Alerta borde</div>
+                    <div className={derived.anchor_alertaBorde ? 'font-semibold text-amber-600 dark:text-amber-400' : 'font-medium text-green-600 dark:text-green-400'}>
+                      {derived.anchor_alertaBorde ? 'PENALIZA' : 'NO'}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </ComponentCard>
+
+          <ComponentCard title="Configuración del soporte">
             <div className="text-sm text-gray-700 dark:text-gray-300">
               <div>
-                <div className="font-medium">Support type</div>
+                <div className="font-medium">Tipo de soporte</div>
                 <div>{form.supportType || '-'}</div>
               </div>
-              <div className="mt-2">
-                <div className="font-medium">Saddle (summary)</div>
-                <div>
-                  Height: {form.saddleHeight || '-'} — Location:{' '}
-                  {form.saddleLocation || '-'}
+              {isSaddle && (
+                <div className="mt-2">
+                  <div className="font-medium">Silleta (resumen)</div>
+                  <div>
+                    Altura: {form.saddleHeight || '-'} — Ubicación:{' '}
+                    {form.saddleLocation || '-'}
+                  </div>
+                </div>
+              )}
+              {isLeg && (
+                <div className="mt-2">
+                  <div className="font-medium">Patas (resumen)</div>
+                  <div>
+                    Perfil: {String(blockValues.leg_perfilUsado || '-')} —
+                    Esbeltez KL/r: {formatDerived(blockValues.leg_esbeltez)}
+                  </div>
+                </div>
+              )}
+              {isSkirt && (
+                <div className="mt-2">
+                  <div className="font-medium">Faldón (resumen)</div>
+                  <div>
+                    Altura: {form.skirtHeight || '-'} — Espesor:{' '}
+                    {form.skirtThickness || '-'}
+                  </div>
+                  <div>
+                    Anillo base ID/OD: {form.skirtRingID || '-'} /{' '}
+                    {form.skirtRingOD || '-'}
+                  </div>
+                </div>
+              )}
+              {isLug && (
+                <div className="mt-2">
+                  <div className="font-medium">Ménsulas (resumen)</div>
+                  <div>
+                    Cantidad: {form.lugQuantity || '-'} — Espesor: {form.lugThickness || '-'}
+                  </div>
+                  <div>
+                    Gusset: {String(form.lugGusset) === 'true' ? 'Sí' : 'No'} — Pad Plate: {String(form.lugPadPlate) === 'true' ? 'Sí' : 'No'}
+                  </div>
+                </div>
+              )}
+              {isRing && (
+                <div className="mt-2">
+                  <div className="font-medium">Anillo (resumen)</div>
+                  <div>
+                    Perfil: {form.ringProfile || '-'} — Alma: {form.ringWebHeight || '-'} x {form.ringWebThickness || '-'}
+                  </div>
+                  <div>
+                    Brida: {form.ringFlangeWidth || '-'} x {form.ringFlangeThickness || '-'} — Placa base: {form.ringBasePlateWidth || '-'} x {form.ringBasePlateLength || '-'}
+                  </div>
+                </div>
+              )}
+              {hasAnchoring && (
+                <div className="mt-2">
+                  <div className="font-medium">Anclaje (resumen)</div>
+                  <div>
+                    Pernos: {form.boltQuantity || form.anchorBoltQuantity || form.skirtAnchorBoltCount || '-'} — Ø {form.boltDiameter || form.anchorBoltDiameter || form.legBoltDiameter || form.skirtAnchorBoltDiameter || '-'}
+                  </div>
+                  <div>
+                    Material: {form.boltMaterial || 'Acero al carbono'} — hef: {form.embedmentDepth || '-'} — f'c: {form.concreteStrength || '-'} — borde: {form.anchorEdgeDistance || '-'}
+                  </div>
+                </div>
+              )}
+            </div>
+          </ComponentCard>
+
+          <ComponentCard title="RESULTADOS DE DISEÑO RECOMENDADOS">
+            <div className="space-y-6 text-sm text-gray-700 dark:text-gray-300">
+              <div>
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  Tabla 1: Dimensiones recomendadas (Salida de diseño)
+                </div>
+                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-800/60">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+                          Parámetro
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+                          Resultado recomendado
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-transparent">
+                      {recommendedDimensionsRows.map((row) => (
+                        <tr key={row.parameter}>
+                          <td className="px-3 py-2 font-medium">{row.parameter}</td>
+                          <td className="px-3 py-2">{row.value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
+
+              <div>
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  Tabla 2: Verificación de cálculo (Prueba de diseño)
+                </div>
+                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-800/60">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+                          Verificación
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+                          Carga real
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+                          Carga permisible
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+                          Estado
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-transparent">
+                      {calculationVerificationRows.map((row) => (
+                        <tr key={row.check}>
+                          <td className="px-3 py-2 font-medium">{row.check}</td>
+                          <td className="px-3 py-2">{row.actual}</td>
+                          <td className="px-3 py-2">{row.allowable}</td>
+                          <td className={`px-3 py-2 ${getStatusClassName(row.status)}`}>
+                            {row.status}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {!!final.notes.length && (
+                <div>
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    Observaciones automáticas
+                  </div>
+                  <ul className="list-disc space-y-1 pl-5">
+                    {displayedNotes.map((note, idx) => (
+                      <li key={`${idx}-${note}`}>{note}</li>
+                    ))}
+                  </ul>
+                  {hiddenNotesCount > 0 && (
+                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      +{hiddenNotesCount} observación(es) adicional(es) omitida(s) para resumir el reporte.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </ComponentCard>
         </div>

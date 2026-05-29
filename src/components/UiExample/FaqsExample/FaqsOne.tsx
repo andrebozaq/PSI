@@ -1,26 +1,46 @@
-import { useState } from "react";
-import FaqOne from "../../faqs/FaqOne";
+import { useState } from 'react';
+import FaqOne from '../../faqs/FaqOne';
 
 const accordionData = [
   {
-    title: "Do I get free updates?",
-    content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.",
+    title: 'Qué es PSI?',
+    content: 'FILHO DA PUTA PREGUMTIAS FREKENTUES',
   },
   {
-    title: "Do I get free updates?",
-    content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.",
+    title: 'Esta aplicación es gratuita?',
+    content: 'FILHO DA PUTA PREGUMTIAS FREKENTUES',
   },
   {
-    title: "Can I Customize TailAdmin to suit my needs?",
-    content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.",
+    title: 'Esta aplicación se mantiene actualizada?',
+    content: 'FILHO DA PUTA PREGUMTIAS FREKENTUES',
   },
   {
-    title: "What does Unlimited Projects mean?",
-    content:
-      "We have a 30-day refund policy. If you are not satisfied with the product, you can request a full refund within the first 30 days.",
+    title: 'Puedo utilizar la app cuanto quiera?',
+    content: 'FILHO DA PUTA PREGUMTIAS FREKENTUES',
+  },
+  {
+    title: 'Cuál es el próposito de esta app?',
+    content: 'FILHO DA PUTA PREGUMTIAS FREKENTUES',
+  },
+  {
+    title: 'Cómo utilizo la app?',
+    content: 'FILHO DA PUTA PREGUMTIAS FREKENTUES',
+  },
+  {
+    title: 'Será gratis para siempre?',
+    content: 'FILHO DA PUTA PREGUMTIAS FREKENTUES',
+  },
+  {
+    title: 'Cuál es el alcance de esta app?',
+    content: 'FILHO DA PUTA PREGUMTIAS FREKENTUES',
+  },
+  {
+    title: 'Cómo se financia este proyecto?',
+    content: 'FILHO DA PUTA PREGUMTIAS FREKENTUES',
+  },
+  {
+    title: 'Preguntas?',
+    content: 'FILHO DA PUTA PREGUMTIAS FREKENTUES',
   },
 ];
 

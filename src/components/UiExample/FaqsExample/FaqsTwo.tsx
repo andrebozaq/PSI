@@ -1,41 +1,56 @@
-import { useState } from "react";
-import FaqTwo from "../../faqs/FaqTwo";
+import { useState } from 'react';
+import FaqTwo from '../../faqs/FaqTwo';
 
 const accordionTwoData = [
   {
-    title: "Do I get free updates?",
+    title: 'Qué es PSI?',
     content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.",
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.',
   },
   {
-    title: "Which license type is suitable for me?",
+    title: 'Esta aplicación es gratuita?',
     content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.",
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.',
   },
   {
-    title: "What are the Seats mentioned on pricing plans?",
+    title: 'Esta aplicación se mantiene actualizada?',
     content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.",
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.',
   },
   {
-    title: "Can I Customize TailAdmin to suit my needs?",
+    title: 'Puedo utilizar la app cuanto quiera?',
     content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.",
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.',
   },
   {
-    title: "What does Unlimited Projects mean?",
+    title: 'Cuál es el próposito de esta app?',
     content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.",
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.',
   },
   {
-    title: "Can I upgrade to a higher plan?",
+    title: 'Cómo utilizo la app?',
     content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.",
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.',
   },
   {
-    title: "Are there dark and light mode options?",
+    title: 'Será gratis para siempre?',
     content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.",
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.',
+  },
+  {
+    title: 'Cuál es el alcance de esta app?',
+    content:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.',
+  },
+  {
+    title: 'Cómo se financia este proyecto?',
+    content:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.',
+  },
+  {
+    title: 'Preguntas?',
+    content:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec quis magna ac nibh malesuada consectetur at vitae ipsum orem ipsum dolor sit amet, consectetur adipiscing elit nam fermentum, leo et lacinia accumsan.',
   },
 ];
 
@@ -81,7 +96,7 @@ export default function FaqsTwo() {
           accordionTwoData.slice(0, 3),
           openIndexFirstGroup,
           handleToggleFirstGroup
-        )}{" "}
+        )}{' '}
         {/* First group */}
       </div>
       <div className="space-y-3">
@@ -89,7 +104,7 @@ export default function FaqsTwo() {
           accordionTwoData.slice(3, 7),
           openIndexSecondGroup,
           handleToggleSecondGroup
-        )}{" "}
+        )}{' '}
         {/* Second group */}
       </div>
     </div>

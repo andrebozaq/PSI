@@ -6,7 +6,7 @@ export default function ResetPassword() {
   return (
     <>
       <PageMeta
-        title="PSI | Software for support analysis"
+        title="PSI Recuperar contraseña | Software de ingeniería"
         description="This is React.js Reset Password Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
       <AuthLayout>

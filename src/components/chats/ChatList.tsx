@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Dropdown } from "../ui/dropdown/Dropdown";
-import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { MoreDotIcon } from "../../icons";
+import { useState } from 'react';
+import { Dropdown } from '../ui/dropdown/Dropdown';
+import { DropdownItem } from '../ui/dropdown/DropdownItem';
+import { MoreDotIcon } from '../../icons';
 
 interface ChatListProps {
   isOpen: boolean;
@@ -22,8 +22,8 @@ export default function ChatList({ isOpen, onToggle }: ChatListProps) {
     <div
       className={`flex-col overflow-auto no-scrollbar transition-all duration-300 ${
         isOpen
-          ? "fixed top-0 left-0 z-999999 h-screen bg-white dark:bg-gray-900"
-          : "hidden xl:flex"
+          ? 'fixed top-0 left-0 z-999999 h-screen bg-white dark:bg-gray-900'
+          : 'hidden xl:flex'
       }`}
     >
       <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800 xl:hidden">
@@ -46,13 +46,13 @@ export default function ChatList({ isOpen, onToggle }: ChatListProps) {
                 onItemClick={closeDropdownTwo}
                 className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
               >
-                View More
+                Ver Más
               </DropdownItem>
               <DropdownItem
                 onItemClick={closeDropdownTwo}
                 className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
               >
-                Delete
+                Eliminar
               </DropdownItem>
             </Dropdown>
           </div>
@@ -83,7 +83,7 @@ export default function ChatList({ isOpen, onToggle }: ChatListProps) {
           <div className="flex cursor-pointer items-center gap-3 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-white/[0.03]">
             <div className="relative h-12 w-full max-w-[48px] rounded-full">
               <img
-                src="./images/user/user-18.jpg"
+                src="./images/user/user-03.png"
                 alt="profile"
                 className="object-cover object-center w-full h-full overflow-hidden rounded-full"
               />
@@ -93,10 +93,10 @@ export default function ChatList({ isOpen, onToggle }: ChatListProps) {
               <div className="flex items-start justify-between">
                 <div>
                   <h5 className="text-sm font-medium text-gray-800 dark:text-white/90">
-                    Kaiya George
+                    Rulei
                   </h5>
                   <p className="mt-0.5 text-theme-xs text-gray-500 dark:text-gray-400">
-                    Project Manager
+                    Estudiante - Luz
                   </p>
                 </div>
                 <span className="text-gray-400 text-theme-xs"> 15 mins </span>
@@ -108,7 +108,7 @@ export default function ChatList({ isOpen, onToggle }: ChatListProps) {
           <div className="flex cursor-pointer items-center gap-3 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-white/[0.03]">
             <div className="relative h-12 w-full max-w-[48px] rounded-full">
               <img
-                src="./images/user/user-17.jpg"
+                src="./images/user/user-04.png"
                 alt="profile"
                 className="object-cover object-center w-full h-full overflow-hidden rounded-full"
               />
@@ -118,10 +118,10 @@ export default function ChatList({ isOpen, onToggle }: ChatListProps) {
               <div className="flex items-start justify-between">
                 <div>
                   <h5 className="text-sm font-medium text-gray-800 dark:text-white/90">
-                    Lindsey Curtis
+                    Rafita
                   </h5>
                   <p className="mt-0.5 text-theme-xs text-gray-500 dark:text-gray-400">
-                    Designer
+                    tesista - Luz
                   </p>
                 </div>
                 <span className="text-gray-400 text-theme-xs"> 30 mins </span>
@@ -133,7 +133,7 @@ export default function ChatList({ isOpen, onToggle }: ChatListProps) {
           <div className="flex cursor-pointer items-center gap-3 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-white/[0.03]">
             <div className="relative h-12 w-full max-w-[48px] rounded-full">
               <img
-                src="./images/user/user-19.jpg"
+                src="./images/user/user-01.png"
                 alt="profile"
                 className="object-cover object-center w-full h-full overflow-hidden rounded-full"
               />
@@ -143,10 +143,10 @@ export default function ChatList({ isOpen, onToggle }: ChatListProps) {
               <div className="flex items-start justify-between">
                 <div>
                   <h5 className="text-sm font-medium text-gray-800 dark:text-white/90">
-                    Zain Geidt
+                    Ana Amorchis
                   </h5>
                   <p className="mt-0.5 text-theme-xs text-gray-500 dark:text-gray-400">
-                    Content Writer
+                    Diseñadora Gráfica
                   </p>
                 </div>
                 <span className="text-gray-400 text-theme-xs"> 45 mins </span>
@@ -158,7 +158,7 @@ export default function ChatList({ isOpen, onToggle }: ChatListProps) {
           <div className="flex cursor-pointer items-center gap-3 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-white/[0.03]">
             <div className="relative h-12 w-full max-w-[48px] rounded-full">
               <img
-                src="./images/user/user-05.jpg"
+                src="./images/user/user-02.png"
                 alt="profile"
                 className="object-cover object-center w-full h-full overflow-hidden rounded-full"
               />
@@ -168,138 +168,13 @@ export default function ChatList({ isOpen, onToggle }: ChatListProps) {
               <div className="flex items-start justify-between">
                 <div>
                   <h5 className="text-sm font-medium text-gray-800 dark:text-white/90">
-                    Carla George
+                    Profe Rosi
                   </h5>
                   <p className="mt-0.5 text-theme-xs text-gray-500 dark:text-gray-400">
-                    Front-end Developer
+                    Docente - Luz
                   </p>
                 </div>
-                <span className="text-gray-400 text-theme-xs"> 2 days </span>
-              </div>
-            </div>
-          </div>
-
-          {/* <!-- Chat List Item --> */}
-          <div className="flex cursor-pointer items-center gap-3 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-white/[0.03]">
-            <div className="relative h-12 w-full max-w-[48px] rounded-full">
-              <img
-                src="./images/user/user-20.jpg"
-                alt="profile"
-                className="object-cover object-center w-full h-full overflow-hidden rounded-full"
-              />
-              <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full border-[1.5px] border-white bg-success-500 dark:border-gray-900"></span>
-            </div>
-            <div className="w-full">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h5 className="text-sm font-medium text-gray-800 dark:text-white/90">
-                    Abram Schleifer
-                  </h5>
-                  <p className="mt-0.5 text-theme-xs text-gray-500 dark:text-gray-400">
-                    Digital Marketer
-                  </p>
-                </div>
-                <span className="text-gray-400 text-theme-xs"> 1 hour </span>
-              </div>
-            </div>
-          </div>
-
-          {/* <!-- Chat List Item --> */}
-          <div className="flex cursor-pointer items-center gap-3 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-white/[0.03]">
-            <div className="relative h-12 w-full max-w-[48px] rounded-full">
-              <img
-                src="./images/user/user-34.jpg"
-                alt="profile"
-                className="object-cover object-center w-full h-full overflow-hidden rounded-full"
-              />
-              <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full border-[1.5px] border-white bg-success-500 dark:border-gray-900"></span>
-            </div>
-            <div className="w-full">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h5 className="text-sm font-medium text-gray-800 dark:text-white/90">
-                    Lincoln Donin
-                  </h5>
-                  <p className="mt-0.5 text-theme-xs text-gray-500 dark:text-gray-400">
-                    Project ManagerProduct Designer
-                  </p>
-                </div>
-                <span className="text-gray-400 text-theme-xs"> 3 days </span>
-              </div>
-            </div>
-          </div>
-
-          {/* <!-- Chat List Item --> */}
-          <div className="flex cursor-pointer items-center gap-3 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-white/[0.03]">
-            <div className="relative h-12 w-full max-w-[48px] rounded-full">
-              <img
-                src="./images/user/user-35.jpg"
-                alt="profile"
-                className="object-cover object-center w-full h-full overflow-hidden rounded-full"
-              />
-              <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full border-[1.5px] border-white bg-success-500 dark:border-gray-900"></span>
-            </div>
-            <div className="w-full">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h5 className="text-sm font-medium text-gray-800 dark:text-white/90">
-                    Erin Geidthem
-                  </h5>
-                  <p className="mt-0.5 text-theme-xs text-gray-500 dark:text-gray-400">
-                    Copyrighter
-                  </p>
-                </div>
-                <span className="text-gray-400 text-theme-xs"> 5 days </span>
-              </div>
-            </div>
-          </div>
-
-          {/* <!-- Chat List Item --> */}
-          <div className="flex cursor-pointer items-center gap-3 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-white/[0.03]">
-            <div className="relative h-12 w-full max-w-[48px] rounded-full">
-              <img
-                src="./images/user/user-36.jpg"
-                alt="profile"
-                className="object-cover object-center w-full h-full overflow-hidden rounded-full"
-              />
-              <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full border-[1.5px] border-white bg-error-500 dark:border-gray-900"></span>
-            </div>
-            <div className="w-full">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h5 className="text-sm font-medium text-gray-800 dark:text-white/90">
-                    Alena Baptista
-                  </h5>
-                  <p className="mt-0.5 text-theme-xs text-gray-500 dark:text-gray-400">
-                    SEO Expert
-                  </p>
-                </div>
-                <span className="text-gray-400 text-theme-xs"> 2 hours </span>
-              </div>
-            </div>
-          </div>
-
-          {/* <!-- Chat List Item --> */}
-          <div className="flex cursor-pointer items-center gap-3 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-white/[0.03]">
-            <div className="relative h-12 w-full max-w-[48px] rounded-full">
-              <img
-                src="./images/user/user-37.jpg"
-                alt="profile"
-                className="object-cover object-center w-full h-full overflow-hidden rounded-full"
-              />
-              <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full border-[1.5px] border-white bg-success-500 dark:border-gray-900"></span>
-            </div>
-            <div className="w-full">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h5 className="text-sm font-medium text-gray-800 dark:text-white/90">
-                    Wilium vamos
-                  </h5>
-                  <p className="mt-0.5 text-theme-xs text-gray-500 dark:text-gray-400">
-                    Content Writer
-                  </p>
-                </div>
-                <span className="text-gray-400 text-theme-xs"> 5 days </span>
+                <span className="text-gray-400 text-theme-xs"> 2 días </span>
               </div>
             </div>
           </div>

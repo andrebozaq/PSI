@@ -6,7 +6,7 @@ export default function SignIn() {
   return (
     <>
       <PageMeta
-        title="UPS | Software for support analysis"
+        title="PSI Login | Software de ingeniería"
         description="This is React.js SignIn Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
       <AuthLayout>

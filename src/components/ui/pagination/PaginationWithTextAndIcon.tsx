@@ -1,7 +1,46 @@
-export default function PaginationWithTextAndIcon() {
+type PaginationWithTextAndIconProps = {
+  currentStep?: number;
+  totalSteps?: number;
+  prevLabel?: string;
+  nextLabel?: string;
+  className?: string;
+  onPrev?: () => void;
+  onNext?: () => void;
+  onPageSelect?: (page: number) => void;
+};
+
+export default function PaginationWithTextAndIcon({
+  currentStep = 1,
+  totalSteps = 5,
+  prevLabel = 'Previous',
+  nextLabel = 'Next',
+  className = '',
+  onPrev,
+  onNext,
+  onPageSelect,
+}: PaginationWithTextAndIconProps) {
+  const prevDisabled = currentStep <= 1;
+  const nextDisabled = currentStep >= totalSteps;
+
+  const pages =
+    totalSteps <= 7
+      ? Array.from({ length: totalSteps }, (_, idx) => idx + 1)
+      : [1, 2, '...', totalSteps - 1, totalSteps];
+
   return (
-    <div className="flex items-center justify-between gap-8 px-6 py-4 sm:justify-normal">
-      <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 sm:px-3.5 sm:py-2.5">
+    <div
+      className={`flex items-center justify-between gap-3 px-4 py-3 sm:justify-normal sm:gap-8 sm:px-6 sm:py-4 ${className}`.trim()}
+    >
+      <button
+        // mobile: left arrow
+        type="button"
+        onClick={onPrev}
+        disabled={prevDisabled}
+        className={`order-1 flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 sm:order-none sm:px-3.5 sm:py-2.5 ${
+          prevDisabled ? 'cursor-not-allowed opacity-60' : ''
+        }`.trim()}
+        aria-label={prevLabel}
+      >
         <svg
           className="fill-current"
           width="20"
@@ -9,6 +48,7 @@ export default function PaginationWithTextAndIcon() {
           viewBox="0 0 20 20"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
         >
           <path
             fillRule="evenodd"
@@ -18,80 +58,60 @@ export default function PaginationWithTextAndIcon() {
           />
         </svg>
 
-        <span className="hidden sm:inline"> Previous </span>
+        <span className="hidden sm:inline"> {prevLabel} </span>
       </button>
 
-      <span className="block text-sm font-medium text-gray-700 dark:text-gray-400 sm:hidden">
-        Page 1 of 10
+      <span className="order-3 block w-full text-center text-sm font-medium text-gray-700 dark:text-gray-400 sm:hidden mt-2">
+        Paso {currentStep} de {totalSteps}
       </span>
 
-      <ul className="hidden items-center gap-0.5 sm:flex">
-        <li>
-          <a
-            href="#"
-            className="flex items-center justify-center w-10 h-10 text-sm font-medium text-white rounded-lg bg-brand-500 hover:bg-brand-500 hover:text-white"
-          >
-            1
-          </a>
-        </li>
+      <ul
+        className="hidden items-center gap-0.5 sm:flex"
+        aria-label="Step navigation"
+      >
+        {pages.map((page, index) => {
+          if (page === '...') {
+            return (
+              <li
+                key={`ellipsis-${index}`}
+                className="px-2 text-sm text-gray-500 dark:text-gray-400"
+              >
+                ...
+              </li>
+            );
+          }
 
-        <li>
-          <a
-            href="#"
-            className="flex items-center justify-center w-10 h-10 text-sm font-medium text-gray-700 rounded-lg hover:bg-brand-500 hover:text-white dark:text-gray-400 dark:hover:text-white"
-          >
-            2
-          </a>
-        </li>
-
-        <li>
-          <a
-            href="#"
-            className="flex items-center justify-center w-10 h-10 text-sm font-medium text-gray-700 rounded-lg hover:bg-brand-500 hover:text-white dark:text-gray-400 dark:hover:text-white"
-          >
-            3
-          </a>
-        </li>
-
-        <li>
-          <a
-            href="#"
-            className="flex items-center justify-center w-10 h-10 text-sm font-medium text-gray-700 rounded-lg hover:bg-brand-500 hover:text-white dark:text-gray-400 dark:hover:text-white"
-          >
-            ...
-          </a>
-        </li>
-
-        <li>
-          <a
-            href="#"
-            className="flex items-center justify-center w-10 h-10 text-sm font-medium text-gray-700 rounded-lg hover:bg-brand-500 hover:text-white dark:text-gray-400 dark:hover:text-white"
-          >
-            8
-          </a>
-        </li>
-
-        <li>
-          <a
-            href="#"
-            className="flex items-center justify-center w-10 h-10 text-sm font-medium text-gray-700 rounded-lg hover:bg-brand-500 hover:text-white dark:text-gray-400 dark:hover:text-white"
-          >
-            9
-          </a>
-        </li>
-
-        <li>
-          <a
-            href="#"
-            className="flex items-center justify-center w-10 h-10 text-sm font-medium text-gray-700 rounded-lg hover:bg-brand-500 hover:text-white dark:text-gray-400 dark:hover:text-white"
-          >
-            10
-          </a>
-        </li>
+          const isActive = page === currentStep;
+          return (
+            <li key={page}>
+              <button
+                type="button"
+                onClick={() => onPageSelect?.(page as number)}
+                className={`flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium transition hover:bg-brand-500 hover:text-white dark:text-gray-400 dark:hover:text-white ${
+                  isActive
+                    ? 'bg-brand-500 text-white'
+                    : 'bg-transparent text-gray-700'
+                }`}
+                aria-current={isActive ? 'step' : undefined}
+              >
+                {page}
+              </button>
+            </li>
+          );
+        })}
       </ul>
 
-      <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 sm:px-3.5 sm:py-2.5">
-        <span className="hidden sm:inline"> Next </span>
+      <button
+        // mobile: right arrow
+        type="button"
+        onClick={onNext}
+        disabled={nextDisabled}
+        className={`order-2 flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 sm:order-none sm:px-3.5 sm:py-2.5 ${
+          nextDisabled ? 'cursor-not-allowed opacity-60' : ''
+        }`.trim()}
+        aria-label={nextLabel}
+      >
+        <span className="hidden sm:inline"> {nextLabel} </span>
 
         <svg
           className="fill-current"
@@ -100,6 +120,7 @@ export default function PaginationWithTextAndIcon() {
           viewBox="0 0 20 20"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
         >
           <path
             fillRule="evenodd"

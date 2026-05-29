@@ -1,16 +1,16 @@
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import ComponentCard from "../../components/common/ComponentCard";
+import PageBreadcrumb from '../../components/common/PageBreadCrumb';
+import ComponentCard from '../../components/common/ComponentCard';
 
-import PageMeta from "../../components/common/PageMeta";
-import DataTableOne from "../../components/tables/DataTables/TableOne/DataTableOne";
-import DataTableTwo from "../../components/tables/DataTables/TableTwo/DataTableTwo";
-import DataTableThree from "../../components/tables/DataTables/TableThree/DataTableThree";
+import PageMeta from '../../components/common/PageMeta';
+import DataTableOne from '../../components/tables/DataTables/TableOne/DataTableOne';
+import DataTableTwo from '../../components/tables/DataTables/TableTwo/DataTableTwo';
+import DataTableThree from '../../components/tables/DataTables/TableThree/DataTableThree';
 
 export default function DataTables() {
   return (
     <>
       <PageMeta
-        title="React.js Data Tables Dashboard | TailAdmin - Next.js Admin Dashboard Template"
+        title="PSI Materiales ASME VIII DIV 2 | Software de ingeniería"
         description="This is React.js Data Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
       <PageBreadcrumb pageTitle="Data Tables" />

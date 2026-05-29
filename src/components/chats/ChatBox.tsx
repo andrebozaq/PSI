@@ -1,12 +1,12 @@
-import ChatBoxHeader from "./ChatBoxHeader";
-import ChatBoxSendForm from "./ChatBoxSendForm";
+import ChatBoxHeader from './ChatBoxHeader';
+import ChatBoxSendForm from './ChatBoxSendForm';
 
 interface ChatItem {
   id: number;
   name: string;
   role: string;
   profileImage: string;
-  status: "online" | "offline";
+  status: 'online' | 'offline';
   lastActive: string;
   message: string;
   isSender: boolean;
@@ -16,64 +16,64 @@ interface ChatItem {
 const chatList: ChatItem[] = [
   {
     id: 1,
-    name: "Kaiya George",
-    role: "Project Manager",
-    profileImage: "./images/user/user-18.jpg",
-    status: "online",
-    lastActive: "15 mins",
-    message: "I want to make an appointment tomorrow from 2:00 to 5:00pm?",
+    name: 'Rulei',
+    role: 'Estudiante - Luz',
+    profileImage: './images/user/user-03.png',
+    status: 'online',
+    lastActive: '15 mins',
+    message: 'Hacemos algo el finde?',
     isSender: false,
   },
   {
     id: 2,
-    name: "Lindsey Curtis",
-    role: "Designer",
-    profileImage: "./images/user/user-17.jpg",
-    status: "online",
-    lastActive: "30 mins",
-    message: "I want to make an appointment tomorrow from 2:00 to 5:00pm?",
+    name: 'Rafita  ',
+    role: 'Tesista - Luz',
+    profileImage: './images/user/user-04.png',
+    status: 'online',
+    lastActive: '30 mins',
+    message: 'Sisa, me llevo al mordisquin',
     isSender: false,
   },
   {
     id: 3,
-    name: "You",
-    role: "",
-    profileImage: "",
-    status: "online",
-    lastActive: "2 hours ago",
-    message: "If don’t like something, I’ll stay away from it.",
+    name: 'You',
+    role: 'Tesista - Luz',
+    profileImage: '',
+    status: 'online',
+    lastActive: 'Hace 2 horas',
+    message: 'Voy pegao',
     isSender: true,
   },
   {
     id: 4,
-    name: "Lindsey Curtis",
-    role: "Designer",
-    profileImage: "./images/user/user-17.jpg",
-    status: "online",
-    lastActive: "2 hours ago",
-    message: "I want more detailed information.",
+    name: 'Rafita',
+    role: 'Tesista - Luz',
+    profileImage: './images/user/user-04.png',
+    status: 'online',
+    lastActive: 'Hace 2 horas',
+    message: 'Le decimos a fruty o q',
     isSender: false,
   },
   {
     id: 5,
-    name: "You",
-    role: "",
-    profileImage: "",
-    status: "online",
-    lastActive: "2 hours ago",
-    message: "They got there early, and got really good seats.",
+    name: 'You',
+    role: 'Tesista - Luz',
+    profileImage: '',
+    status: 'online',
+    lastActive: 'Hace 2 horas',
+    message: 'Mmm dale sisa',
     isSender: true,
   },
   {
     id: 6,
-    name: "Lindsey Curtis",
-    role: "Designer",
-    profileImage: "./images/user/user-17.jpg",
-    status: "online",
-    lastActive: "2 hours ago",
-    message: "Please preview the image",
+    name: 'Rulei',
+    role: 'Estudiante - Luz',
+    profileImage: './images/user/user-03.png',
+    status: 'online',
+    lastActive: 'Hace 2 horas',
+    message: 'Aquí será la jodita xD',
     isSender: false,
-    imagePreview: "./images/chat/chat.jpg",
+    imagePreview: './images/chat/chat.jpg',
   },
 ];
 
@@ -87,7 +87,7 @@ export default function ChatBox() {
           <div
             key={chat.id}
             className={`flex ${
-              chat.isSender ? "justify-end" : "items-start gap-4"
+              chat.isSender ? 'justify-end' : 'items-start gap-4'
             }`}
           >
             {!chat.isSender && (
@@ -100,7 +100,7 @@ export default function ChatBox() {
               </div>
             )}
 
-            <div className={`${chat.isSender ? "text-right" : ""}`}>
+            <div className={`${chat.isSender ? 'text-right' : ''}`}>
               {chat.imagePreview && (
                 <div className="mb-2 w-full max-w-[270px] overflow-hidden rounded-lg">
                   <img
@@ -114,9 +114,9 @@ export default function ChatBox() {
               <div
                 className={`px-3 py-2 rounded-lg ${
                   chat.isSender
-                    ? "bg-brand-500 text-white dark:bg-brand-500"
-                    : "bg-gray-100 dark:bg-white/5 text-gray-800 dark:text-white/90"
-                } ${chat.isSender ? "rounded-tr-sm" : "rounded-tl-sm"}`}
+                    ? 'bg-brand-500 text-white dark:bg-brand-500'
+                    : 'bg-gray-100 dark:bg-white/5 text-gray-800 dark:text-white/90'
+                } ${chat.isSender ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}
               >
                 <p className="text-sm ">{chat.message}</p>
               </div>

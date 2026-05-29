@@ -20,7 +20,9 @@ export default function Videos() {
             <SixteenIsToNine />
           </ComponentCard>
           <ComponentCard title="Video Ratio 4:3">
-          
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Próximamente contenido 4:3
+            </div>
           </ComponentCard>
         </div>
         <div className="space-y-5 sm:space-y-6">

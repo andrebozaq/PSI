@@ -3,11 +3,15 @@ import React from 'react';
 const Anchoring: React.FC<{
   form: any;
   onFieldChange: (k: string, v: any) => void;
-}> = ({ form, onFieldChange }) => {
+  unitSystem?: 'SI' | 'US';
+}> = ({ form, onFieldChange, unitSystem = 'SI' }) => {
+  const lengthUnit = unitSystem === 'SI' ? 'mm' : 'in';
+  const pressureUnit = unitSystem === 'SI' ? 'MPa' : 'psi';
+
   return (
     <div className="space-y-2">
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Bolt quantity
+        Cantidad de pernos
         <select
           value={form.boltQuantity || '4'}
           onChange={(e) => onFieldChange('boltQuantity', e.target.value)}
@@ -22,7 +26,7 @@ const Anchoring: React.FC<{
       </label>
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Bolt diameter
+        Diámetro del perno ({lengthUnit})
         <input
           type="number"
           step="any"
@@ -33,21 +37,21 @@ const Anchoring: React.FC<{
       </label>
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Bolt material
+        Material del perno
         <select
           value={form.boltMaterial || 'Carbon steel'}
           onChange={(e) => onFieldChange('boltMaterial', e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         >
-          <option>Carbon steel</option>
-          <option>Stainless steel</option>
+          <option>Acero al carbono</option>
+          <option>Acero inoxidable</option>
           <option>A325</option>
           <option>A490</option>
         </select>
       </label>
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Embedment depth
+        Profundidad de anclaje ({lengthUnit})
         <input
           type="number"
           step="any"
@@ -58,7 +62,7 @@ const Anchoring: React.FC<{
       </label>
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Concrete strength (MPa)
+        Resistencia del concreto ({pressureUnit})
         <input
           type="number"
           step="any"
@@ -69,22 +73,22 @@ const Anchoring: React.FC<{
       </label>
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Anchor Type
+        Tipo de anclaje
         <select
           value={form.anchorType || ''}
           onChange={(e) => onFieldChange('anchorType', e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         >
-          <option value="">Select an anchor</option>
-          <option>Hex Head Bolt</option>
-          <option>L-Hook Bolt</option>
-          <option>J-Hook Bolt</option>
-          <option>Epoxy Anchor</option>
+          <option value="">Selecciona un anclaje</option>
+          <option>Perno de cabeza hexagonal</option>
+          <option>Perno en L</option>
+          <option>Perno en J</option>
+          <option>Anclaje epóxico</option>
         </select>
       </label>
 
       <label className="text-sm text-gray-600 dark:text-gray-300">
-        Edge Distance (Distancia al borde) (mm)
+        Distancia al borde ({lengthUnit})
         <input
           type="number"
           step="any"

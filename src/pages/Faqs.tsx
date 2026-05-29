@@ -1,28 +1,26 @@
-import PageBreadcrumb from "../components/common/PageBreadCrumb";
-import ComponentCard from "../components/common/ComponentCard";
-import FaqsOne from "../components/UiExample/FaqsExample/FaqsOne";
-import FaqsTwo from "../components/UiExample/FaqsExample/FaqsTwo";
-import FaqsThree from "../components/UiExample/FaqsExample/FaqsThree";
-import PageMeta from "../components/common/PageMeta";
+import PageBreadcrumb from '../components/common/PageBreadCrumb';
+import ComponentCard from '../components/common/ComponentCard';
+import FaqsOne from '../components/UiExample/FaqsExample/FaqsOne';
+import PageMeta from '../components/common/PageMeta';
 
 export default function Faqs() {
   return (
     <>
       <PageMeta
-        title="React.js Faqs Dashboard | TailAdmin - Next.js Admin Dashboard Template"
+        title="PSI Preguntas frecuentes | Software de ingeniería"
         description="This is React.js Faqs Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
-      <PageBreadcrumb pageTitle="Faqs" />
+      <PageBreadcrumb pageTitle="Preguntas frecuentes" />
       <div className="space-y-5 sm:space-y-6">
-        <ComponentCard title="Faq’s 1">
+        <ComponentCard title="Alguna duda? Acá te la respondemos!">
           <FaqsOne />
         </ComponentCard>
-        <ComponentCard title="Faq’s 2">
+        {/* <ComponentCard title="Alguna duda? Acá te la respondemos!">
           <FaqsTwo />
-        </ComponentCard>
-        <ComponentCard title="Faq’s 3">
+        </ComponentCard> */}
+        {/* <ComponentCard title="Alguna duda? Acá te la respondemos!">
           <FaqsThree />
-        </ComponentCard>
+        </ComponentCard> */}
       </div>
     </>
   );
