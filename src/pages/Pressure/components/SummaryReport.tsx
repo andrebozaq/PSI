@@ -8,11 +8,13 @@ import {
 } from '../supports/DesignCalculations/Constants';
 
 type Props = {
+  mode?: 'design' | 'analysis';
   form: any;
   unitSystem: 'SI' | 'US';
   lightweight: LightweightResults;
   block: BlockResults;
   final: FinalDesignResults;
+  onSave?: () => void;
 };
 
 const unitLabels = {
@@ -26,11 +28,13 @@ const unitLabels = {
 };
 
 export default function SummaryReport({
+  mode = 'design',
   form,
   unitSystem,
   lightweight,
   block,
   final,
+  onSave,
 }: Props) {
   /**
   * Objetivo: renderizar el reporte final del wizard de soporte.
@@ -320,7 +324,7 @@ export default function SummaryReport({
       .map((l) => l.outerHTML)
       .join('\n');
 
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Resumen</title>${links}<style>@media print{.no-print{display:none!important}.page-break{page-break-after:always}}</style></head><body>${el.innerHTML}</body></html>`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${mode === 'analysis' ? 'Reporte de Verificación Estructural' : 'Reporte de Diseño Estructural'}</title>${links}<style>@media print{.no-print{display:none!important}.page-break{page-break-after:always}}</style></head><body>${el.innerHTML}</body></html>`;
     printWindow.document.open();
     printWindow.document.write(html);
     printWindow.document.close();
@@ -332,17 +336,63 @@ export default function SummaryReport({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end no-print">
+      <div className="flex justify-end gap-3 no-print">
+        {onSave && (
+          <button
+            type="button"
+            onClick={onSave}
+            className="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-theme-sm transition hover:bg-green-700"
+          >
+            Guardar Proyecto
+          </button>
+        )}
         <button
           type="button"
           onClick={handlePrint}
-          className="rounded-md bg-brand-500 px-3 py-2 text-sm font-semibold text-white"
+          className="rounded-md bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-theme-sm transition hover:bg-brand-600"
         >
           Imprimir / Exportar
         </button>
       </div>
 
       <div ref={printRef} id="summary-print-area">
+        {/* Print Header */}
+        <div className="mb-6 hidden border-b-2 border-gray-300 pb-4 print:block dark:border-gray-800">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-800 dark:bg-gray-800 dark:text-gray-100">
+                LUZ
+              </div>
+              <div>
+                <h1 className="text-xl font-bold uppercase text-gray-900 dark:text-white">
+                  {mode === 'analysis' ? 'Reporte de Verificación Estructural' : 'Reporte de Diseño Estructural'}
+                </h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Universidad del Zulia - Facultad de Ingeniería - Escuela de Mecánica
+                </p>
+              </div>
+            </div>
+            <div className="text-right text-xs text-gray-600 dark:text-gray-400">
+              <p>
+                <strong>Fecha:</strong> {new Date().toLocaleDateString('es-VE')}
+              </p>
+              <p>
+                <strong>Código:</strong> {form.designCode || 'ASME VIII / COVENIN'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Screen Dynamic Title */}
+        <div className="mb-4 print:hidden">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            {mode === 'analysis' ? 'Reporte de Verificación Estructural' : 'Reporte de Diseño Estructural'}
+          </h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Resumen del análisis y verificación de soportes del recipiente a presión.
+          </p>
+        </div>
+
         <Alert
           variant={summaryAlert.variant}
           title={summaryAlert.title}
@@ -761,39 +811,43 @@ export default function SummaryReport({
             </div>
           </ComponentCard>
 
-          <ComponentCard title="RESULTADOS DE DISEÑO RECOMENDADOS">
+          <ComponentCard title={mode === 'analysis' ? "RESULTADOS DE VERIFICACIÓN" : "RESULTADOS DE DISEÑO RECOMENDADOS"}>
             <div className="space-y-6 text-sm text-gray-700 dark:text-gray-300">
-              <div>
-                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  Tabla 1: Dimensiones recomendadas (Salida de diseño)
-                </div>
-                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead className="bg-gray-50 dark:bg-gray-800/60">
-                      <tr>
-                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-                          Parámetro
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-                          Resultado recomendado
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-transparent">
-                      {recommendedDimensionsRows.map((row) => (
-                        <tr key={row.parameter}>
-                          <td className="px-3 py-2 font-medium">{row.parameter}</td>
-                          <td className="px-3 py-2">{row.value}</td>
+              {mode !== 'analysis' && (
+                <div>
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    Tabla 1: Dimensiones recomendadas (Salida de diseño)
+                  </div>
+                  <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                      <thead className="bg-gray-50 dark:bg-gray-800/60">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+                            Parámetro
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+                            Resultado recomendado
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-transparent">
+                        {recommendedDimensionsRows.map((row) => (
+                          <tr key={row.parameter}>
+                            <td className="px-3 py-2 font-medium">{row.parameter}</td>
+                            <td className="px-3 py-2">{row.value}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div>
                 <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  Tabla 2: Verificación de cálculo (Prueba de diseño)
+                  {mode === 'analysis' 
+                    ? 'Tabla de Verificación de cálculo (Análisis estructural)' 
+                    : 'Tabla 2: Verificación de cálculo (Prueba de diseño)'}
                 </div>
                 <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">

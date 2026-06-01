@@ -11,6 +11,10 @@ import {
   TbServer2,
 } from 'react-icons/tb';
 import PageMeta from '../components/common/PageMeta';
+import { useState, useEffect } from 'react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebaseConfig';
+import { useAuth } from '../contexts/AuthContext';
 
 const moduleSlides = [
   {
@@ -43,30 +47,54 @@ const moduleSlides = [
   },
 ];
 
-const quickStats = [
-  {
-    label: 'Diseños guardados',
-    value: '5',
-    icon: <TbFileDescription className="h-5 w-5" />,
-    hint: 'Mock data',
-    link: '/soporte-diseno',
-  },
-  {
-    label: 'Base de datos',
-    value: 'Conectada',
-    icon: <TbServer2 className="h-5 w-5" />,
-    hint: 'Local dev',
-    status: 'online',
-  },
-  {
-    label: 'Última sincronización',
-    value: 'Hace 2 h',
-    icon: <TbClock className="h-5 w-5" />,
-    hint: 'Demo',
-  },
-];
-
 export default function Home() {
+  const { currentUser } = useAuth();
+  const [projectCount, setProjectCount] = useState<number | string>('...');
+
+  useEffect(() => {
+    const fetchProjectCount = async () => {
+      if (!currentUser) {
+        setProjectCount(0);
+        return;
+      }
+      try {
+        const q = query(
+          collection(db, 'studies'),
+          where('userId', '==', currentUser.uid)
+        );
+        const querySnapshot = await getDocs(q);
+        setProjectCount(querySnapshot.size);
+      } catch (error) {
+        console.error('Error fetching projects count:', error);
+        setProjectCount(0);
+      }
+    };
+    fetchProjectCount();
+  }, [currentUser]);
+
+  const quickStats = [
+    {
+      label: 'Diseños guardados',
+      value: String(projectCount),
+      icon: <TbFileDescription className="h-5 w-5" />,
+      hint: currentUser ? 'Sincronizado' : 'Sin iniciar sesión',
+      link: '/proyectos',
+    },
+    {
+      label: 'Base de datos',
+      value: 'Conectada',
+      icon: <TbServer2 className="h-5 w-5" />,
+      hint: 'Local dev',
+      status: 'online',
+    },
+    {
+      label: 'Última sincronización',
+      value: 'Al día',
+      icon: <TbClock className="h-5 w-5" />,
+      hint: 'Firebase',
+    },
+  ];
+
   return (
     <>
       <PageMeta
@@ -238,11 +266,11 @@ export default function Home() {
                 Estado rápido
               </p>
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                Actividad reciente (demo)
+                Actividad reciente
               </h3>
             </div>
-            <span className="text-xs text-gray-400 dark:text-gray-500">
-              Datos hardcodeados por ahora
+            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+              Conectado
             </span>
           </div>
 

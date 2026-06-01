@@ -1,10 +1,41 @@
-import { Link } from 'react-router';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { useAuth } from '../../contexts/AuthContext';
 import Label from '../form/Label';
 import Input from '../form/input/InputField';
+import { resetPassword } from '../../services/authService';
 
 export default function ResetPasswordForm() {
+  const [email, setEmail] = useState('');
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/inicio');
+    }
+  }, [currentUser, navigate]);
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage('');
+    setError('');
+    setLoading(true);
+    try {
+      await resetPassword(email);
+      setMessage('Te hemos enviado un correo con instrucciones.');
+    } catch (err: any) {
+      setError(err.message || 'Error al enviar el correo');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 w-full lg:w-1/2">
+    <div className="relative flex flex-col flex-1">
       <div className="w-full max-w-md pt-10 mx-auto">
         <Link
           to="/"
@@ -40,7 +71,9 @@ export default function ResetPasswordForm() {
           </p>
         </div>
         <div>
-          <form>
+          {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
+          {message && <p className="mb-4 text-sm text-green-500">{message}</p>}
+          <form onSubmit={handleResetPassword}>
             <div className="space-y-5">
               {/* <!-- Email --> */}
               <div>
@@ -52,13 +85,20 @@ export default function ResetPasswordForm() {
                   id="email"
                   name="email"
                   placeholder="Ingresa tu email"
+                  value={email}
+                  onChange={(e: any) => setEmail(e.target.value)}
+                  required
                 />
               </div>
 
               {/* <!-- Button --> */}
               <div>
-                <button className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
-                  Enviar Link
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
+                >
+                  {loading ? 'Enviando...' : 'Enviar Link'}
                 </button>
               </div>
             </div>
@@ -70,31 +110,12 @@ export default function ResetPasswordForm() {
                 to="/login"
                 className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
               >
-                Click aquí
+                {' '}Click aquí
               </Link>
             </p>
           </div>
+          </div>
         </div>
-        <Link
-          to="https://wde.secretarialuz.org/wde/index.html"
-          className="absolute left-4 bottom-4 flex items-center gap-4"
-        >
-          <img
-            width={140}
-            height={48}
-            className="dark:hidden"
-            src="/images/logo/LUZ.png"
-            alt="Logo"
-          />
-          <img
-            width={140}
-            height={48}
-            className="hidden dark:block"
-            src="/images/logo/LUZ-dark.png"
-            alt="Logo-dark"
-          />
-        </Link>
       </div>
-    </div>
   );
 }

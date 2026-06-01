@@ -5,7 +5,8 @@ const Skirt: React.FC<{
   onFieldChange: (k: string, v: string) => void;
   unitSystem?: 'SI' | 'US';
   mode?: 'design' | 'analysis';
-}> = ({ form, onFieldChange, unitSystem, mode = 'analysis' }) => {
+  dbMaterials?: any[];
+}> = ({ form, onFieldChange, unitSystem, mode = 'analysis', dbMaterials }) => {
   const lengthUnit = unitSystem === 'US' ? 'in' : 'mm';
   void mode;
   const boltCountValue = form.boltQuantity ?? form.skirtAnchorBoltCount ?? '';
@@ -43,10 +44,12 @@ const Skirt: React.FC<{
           onChange={(e) => onFieldChange('skirtMaterial', e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         >
-          <option>Acero al carbono</option>
-          <option>Acero inoxidable 304</option>
-          <option>Acero inoxidable 316</option>
-          <option>Acero aleado</option>
+          <option value="">Seleccione un material...</option>
+          {dbMaterials && dbMaterials.map((mat: any) => (
+            <option key={mat.id} value={mat.name}>
+              {mat.name} ({mat.standard})
+            </option>
+          ))}
         </select>
       </label>
 

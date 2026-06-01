@@ -69,33 +69,23 @@ export const navItems: NavItem[] = [
     icon: <GiIBeam />,
     name: 'Elementos estructurales',
     subItems: [
-      { name: 'Vigas', path: '/vigas-analisis', new: false, pro: false },
+      { name: 'Vigas', path: '/proximamente', new: false, pro: false },
       {
         name: 'Análisis de soldadura',
-        path: '/soldadura-analisis',
+        path: '/proximamente',
         new: false,
         pro: false,
       },
       {
         name: 'Diseño de soldadura',
-        path: '/soldadura-diseno',
+        path: '/proximamente',
         new: false,
         pro: false,
       },
     ],
   },
-
-  // {
-  // {
-  //   name: 'Tareas',
-  //   icon: <TaskIcon />,
-  //   subItems: [
-  //     { name: 'Lista', path: '/task-list', pro: false },
-  //     { name: 'Kanban', path: '/task-kanban', pro: false },
-  //   ],
-  // },
   {
-    name: 'Formularios',
+    name: 'Librería de Materiales',
     icon: <ListIcon />,
     subItems: [
       { name: 'Elementos de formulario', path: '/form-elements', pro: false },
@@ -103,7 +93,7 @@ export const navItems: NavItem[] = [
     ],
   },
   {
-    name: 'Tablas',
+    name: 'Normativas',
     icon: <TableIcon />,
     subItems: [
       { name: 'Materiales ASME VIII DIV 1', path: '/basic-tables', pro: false },
@@ -111,7 +101,7 @@ export const navItems: NavItem[] = [
     ],
   },
   {
-    name: 'Páginas',
+    name: 'Configuración del Motor',
     icon: <PageIcon />,
     subItems: [
       { name: 'File Manager', path: '/file-manager', pro: false },
@@ -126,7 +116,11 @@ export const navItems: NavItem[] = [
       { name: 'Success', path: '/success', pro: false },
     ],
   },
-
+  {
+    icon: <DocsIcon />,
+    name: 'Proyectos guardados',
+    path: '/proyectos',
+  },
   {
     icon: <UserCircleIcon />,
     name: 'Perfil de Usuario',
@@ -235,19 +229,14 @@ const AppSidebar: React.FC = () => {
 
   useEffect(() => {
     let submenuMatched = false;
-    ['main', 'support', 'others'].forEach((menuType) => {
-      const items =
-        menuType === 'main'
-          ? navItems
-          : menuType === 'support'
-            ? supportItems
-            : othersItems;
+    ['main'].forEach((menuType) => {
+      const items = navItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
               setOpenSubmenu({
-                type: menuType as 'main' | 'support' | 'others',
+                type: 'main',
                 index,
               });
               submenuMatched = true;
@@ -483,38 +472,7 @@ const AppSidebar: React.FC = () => {
               </h2>
               {renderMenuItems(navItems, 'main')}
             </div>
-            <div className="">
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? 'lg:justify-center'
-                    : 'justify-start'
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  'Social'
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-              {renderMenuItems(supportItems, 'support')}
-            </div>
-            <div className="">
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? 'lg:justify-center'
-                    : 'justify-start'
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  'Otros'
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-              {renderMenuItems(othersItems, 'others')}
-            </div>
+
           </div>
         </nav>
         {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null}

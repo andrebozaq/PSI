@@ -7,7 +7,8 @@ const GeometryCard: React.FC<{
   handleFocus?: (key: string) => void;
   handleBlur?: (key: string) => void;
   touched?: Record<string, boolean>;
-}> = ({ form, handleInputChange, unitSystem, handleFocus, handleBlur, touched }) => {
+  dbMaterials?: any[];
+}> = ({ form, handleInputChange, unitSystem, handleFocus, handleBlur, touched, dbMaterials }) => {
   const unit = unitSystem === 'SI' ? 'mm' : 'in';
   const lengthLabel =
     form && form.vesselType === 'Columna vertical' ? 'Altura' : 'Longitud';
@@ -74,10 +75,12 @@ const GeometryCard: React.FC<{
             onChange={handleInputChange('vesselMaterial')}
             className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 print:border-none print:bg-transparent print:p-0 print:h-auto print:font-bold print:text-black print:appearance-none"
           >
-            <option>Acero al carbono</option>
-            <option>Acero inoxidable 304</option>
-            <option>Acero inoxidable 316</option>
-            <option>Acero aleado</option>
+            <option value="">Seleccione un material...</option>
+            {dbMaterials && dbMaterials.map((mat: any) => (
+              <option key={mat.id} value={mat.name}>
+                {mat.name} ({mat.standard})
+              </option>
+            ))}
           </select>
         </label>
 

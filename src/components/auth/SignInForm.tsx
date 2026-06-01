@@ -1,14 +1,67 @@
-import { useState } from 'react';
-import { Link } from 'react-router';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { useAuth } from '../../contexts/AuthContext';
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from '../../icons';
 import Label from '../form/Label';
 import Input from '../form/input/InputField';
 import Checkbox from '../form/input/Checkbox';
 import Button from '../ui/button/Button';
+import { loginWithEmail, loginWithGoogle } from '../../services/authService';
+import { getFirebaseErrorMessage } from '../../utils/firebaseErrors';
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/inicio');
+    }
+  }, [currentUser, navigate]);
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
+    if (!email) newErrors.email = 'El correo es obligatorio';
+    if (!password) newErrors.password = 'La contraseña es obligatoria';
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
+    setErrors({});
+    setLoading(true);
+    try {
+      await loginWithEmail(email, password);
+      navigate('/');
+    } catch (err: any) {
+      const { field, message } = getFirebaseErrorMessage(err.code);
+      setErrors({ [field]: message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setErrors({});
+    setLoading(true);
+    try {
+      await loginWithGoogle();
+      navigate('/');
+    } catch (err: any) {
+      const { field, message } = getFirebaseErrorMessage(err.code);
+      setErrors({ [field]: message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="relative flex flex-col flex-1">
       <div className="w-full max-w-md pt-10 mx-auto">
@@ -31,8 +84,13 @@ export default function SignInForm() {
             </p>
           </div>
           <div>
+            {errors.general && <p className="mb-4 text-sm text-red-500">{errors.general}</p>}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
-              {/* <button className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
+              <button 
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
+              >
                 <svg
                   width="20"
                   height="20"
@@ -58,22 +116,10 @@ export default function SignInForm() {
                   />
                 </svg>
                 Log in con Google
-              </button> */}
-              {/* <button className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
-                <svg
-                  width="21"
-                  className="fill-current"
-                  height="20"
-                  viewBox="0 0 21 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M15.6705 1.875H18.4272L12.4047 8.75833L19.4897 18.125H13.9422L9.59717 12.4442L4.62554 18.125H1.86721L8.30887 10.7625L1.51221 1.875H7.20054L11.128 7.0675L15.6705 1.875ZM14.703 16.475H16.2305L6.37054 3.43833H4.73137L14.703 16.475Z" />
-                </svg>
-                Log in con X
-              </button> */}
+              </button>
             </div>
-            {/* <div className="relative py-3 sm:py-5">
+            
+            <div className="relative py-3 sm:py-5">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
               </div>
@@ -82,14 +128,25 @@ export default function SignInForm() {
                   O
                 </span>
               </div>
-            </div> */}
-            <form>
+            </div>
+
+            <form onSubmit={handleEmailLogin}>
               <div className="space-y-6">
                 <div>
                   <Label>
                     Email <span className="text-error-500">*</span>{' '}
                   </Label>
-                  <Input placeholder="ejemplo@gmail.com" />
+                  <Input 
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Escribe tu correo electrónico"
+                    value={email}
+                    onChange={(e: any) => setEmail(e.target.value)}
+                    error={!!errors.email}
+                    hint={errors.email}
+                    required
+                  />
                 </div>
                 <div>
                   <Label>
@@ -99,6 +156,10 @@ export default function SignInForm() {
                     <Input
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Ingresa tu contraseña"
+                      value={password}
+                      onChange={(e: any) => setPassword(e.target.value)}
+                      error={!!errors.password}
+                      required
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -111,6 +172,11 @@ export default function SignInForm() {
                       )}
                     </span>
                   </div>
+                  {errors.password && (
+                    <p className="mt-1.5 text-xs text-error-500">
+                      {errors.password}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -127,8 +193,8 @@ export default function SignInForm() {
                   </Link>
                 </div>
                 <div>
-                  <Button className="w-full" size="sm">
-                    Log in
+                  <Button className="w-full" size="sm" disabled={loading}>
+                    {loading ? 'Cargando...' : 'Log in'}
                   </Button>
                 </div>
               </div>
@@ -146,25 +212,6 @@ export default function SignInForm() {
               </p>
             </div>
           </div>
-          <Link
-            to="https://wde.secretarialuz.org/wde/index.html"
-            className="absolute left-4 bottom-4 flex items-center gap-4"
-          >
-            <img
-              width={140}
-              height={48}
-              className="dark:hidden"
-              src="/images/logo/LUZ.png"
-              alt="Logo"
-            />
-            <img
-              width={140}
-              height={48}
-              className="hidden dark:block"
-              src="/images/logo/LUZ-dark.png"
-              alt="Logo-dark"
-            />
-          </Link>
         </div>
       </div>
     </div>

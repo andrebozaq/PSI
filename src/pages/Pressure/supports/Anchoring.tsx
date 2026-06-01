@@ -4,7 +4,8 @@ const Anchoring: React.FC<{
   form: any;
   onFieldChange: (k: string, v: any) => void;
   unitSystem?: 'SI' | 'US';
-}> = ({ form, onFieldChange, unitSystem = 'SI' }) => {
+  dbMaterials?: any[];
+}> = ({ form, onFieldChange, unitSystem = 'SI', dbMaterials }) => {
   const lengthUnit = unitSystem === 'SI' ? 'mm' : 'in';
   const pressureUnit = unitSystem === 'SI' ? 'MPa' : 'psi';
 
@@ -43,10 +44,12 @@ const Anchoring: React.FC<{
           onChange={(e) => onFieldChange('boltMaterial', e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         >
-          <option>Acero al carbono</option>
-          <option>Acero inoxidable</option>
-          <option>A325</option>
-          <option>A490</option>
+          <option value="">Seleccione un material...</option>
+          {dbMaterials && dbMaterials.map((mat: any) => (
+            <option key={mat.id} value={mat.name}>
+              {mat.name} ({mat.standard})
+            </option>
+          ))}
         </select>
       </label>
 

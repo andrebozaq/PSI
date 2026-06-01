@@ -366,10 +366,23 @@ export default function AnalysisDashboard() {
         </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <PageBreadCrumb pageTitle="Análisis de soportes" />
-        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-          <span>Sistema de unidades</span>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4 print:hidden">
+        <div className="space-y-2">
+          <PageBreadCrumb pageTitle="Análisis de soportes" />
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Panel de Análisis Estructural
+            </h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Ajuste los parámetros del soporte y verifique los resultados de análisis en tiempo real.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            Sistema de unidades
+          </span>
           <div className="flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-900">
             <button
               type="button"
@@ -513,8 +526,8 @@ export default function AnalysisDashboard() {
               {savedCases.find((c) => c.id === activeCaseId)?.note}
             </p>
 
-            <div className="space-y-4 print:space-y-0 print:grid print:grid-cols-2 print:gap-x-8 print:gap-y-4">
-              <ComponentCard title="Cargas y sitio" className="p-3">
+            <div className="space-y-6 print:space-y-0 print:grid print:grid-cols-2 print:gap-x-8 print:gap-y-4">
+              <ComponentCard title="Cargas y sitio">
                 <WindCard
                   form={form}
                   handleInputChange={handleInputChange}
@@ -528,7 +541,7 @@ export default function AnalysisDashboard() {
                 </div>
               </ComponentCard>
 
-              <ComponentCard title="Geometría" className="p-3">
+              <ComponentCard title="Geometría">
                 <GeometryCard
                   form={form}
                   handleInputChange={handleInputChange}
@@ -536,8 +549,9 @@ export default function AnalysisDashboard() {
                 />
               </ComponentCard>
 
-              <ComponentCard title="Soporte" className="p-3 space-y-3">
-                <div className="grid grid-cols-2 gap-2">
+              <ComponentCard title="Soporte">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
                   <label className="text-xs text-gray-600 dark:text-gray-300">
                     Tipo de soporte
                     <select
@@ -602,8 +616,9 @@ export default function AnalysisDashboard() {
                         Seleccione un tipo de soporte válido para mostrar sus
                         parámetros.
                       </p>
-                    );
+                      );
                   })()}
+                </div>
                 </div>
               </ComponentCard>
             </div>

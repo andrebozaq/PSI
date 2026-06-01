@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import DesignSupports from './pages/Pressure/DesignSupport';
+import AnalysisSupport from './pages/AnalysisSupport';
 import AnalyticsBeams from './pages/Structural/AnalyticsBeams';
 import DesignWeld from './pages/Structural/DesignWeld';
 import AnalyticsWeld from './pages/Structural/AnalyticsWeld';
@@ -63,8 +65,16 @@ import TaskList from './pages/Task/TaskList';
 // import Saas from './pages/Pressure/Saas';
 import Home from './pages/Home';
 import Conversor from './pages/Conversor';
+import SavedProjects from './pages/SavedProjects';
+import { seedMaterialsDatabase } from './utils/seedMaterials';
+import { useEffect } from 'react';
 
 export default function App() {
+  useEffect(() => {
+    // Sube los materiales a Firestore en el primer render
+    seedMaterialsDatabase();
+  }, []);
+
   return (
     <>
       <Router>
@@ -72,15 +82,21 @@ export default function App() {
         <div className="flex min-h-screen flex-col">
           <div className="flex-1">
             <Routes>
-          {/* Dashboard Layout */}
-          <Route element={<AppLayout />}>
+          {/* Dashboard Layout (Protected) */}
+          <Route element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
             <Route index path="/inicio" element={<Home />} />
+            <Route path="/proyectos" element={<SavedProjects />} />
             <Route path="/soporte-analisis" element={<AnalyticsSupports />} />
             <Route
               path="/soporte-analisis-editor"
               element={<AnalysisDashboard />}
             />
             <Route path="/soporte-diseno" element={<DesignSupports />} />
+            <Route path="/analisis" element={<AnalysisSupport />} />
             <Route path="/recipientes-analisis" element={<Vessels />} />
             <Route path="/vigas-analisis" element={<AnalyticsBeams />} />
             <Route path="/soldadura-diseno" element={<DesignWeld />} />

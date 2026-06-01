@@ -1,15 +1,83 @@
-import { useState } from 'react';
-import { Link } from 'react-router';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { useAuth } from '../../contexts/AuthContext';
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from '../../icons';
 import Label from '../form/Label';
 import Input from '../form/input/InputField';
 import Checkbox from '../form/input/Checkbox';
+import Button from '../ui/button/Button';
+import { Modal } from '../ui/modal';
+import { registerWithEmail, loginWithGoogle } from '../../services/authService';
+import { getFirebaseErrorMessage } from '../../utils/firebaseErrors';
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [fname, setFname] = useState('');
+  const [lname, setLname] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/inicio');
+    }
+  }, [currentUser, navigate]);
+  const handleEmailRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
+    if (!fname) newErrors.fname = 'El nombre es obligatorio';
+    if (!lname) newErrors.lname = 'El apellido es obligatorio';
+    if (!email) newErrors.email = 'El correo es obligatorio';
+    if (!password) newErrors.password = 'La contraseña es obligatoria';
+    if (!confirmPassword) newErrors.confirmPassword = 'Por favor confirma tu contraseña';
+    if (password && confirmPassword && password !== confirmPassword) {
+      newErrors.confirmPassword = 'Las contraseñas no coinciden';
+    }
+    if (!isChecked) {
+      newErrors.terms = 'Debes aceptar los términos y condiciones';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
+    setLoading(true);
+    try {
+      await registerWithEmail(email, password, fname, lname);
+      navigate('/');
+    } catch (err: any) {
+      const { field, message } = getFirebaseErrorMessage(err.code);
+      setErrors({ [field]: message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleRegister = async () => {
+    setErrors({});
+    setLoading(true);
+    try {
+      await loginWithGoogle();
+      navigate('/');
+    } catch (err: any) {
+      const { field, message } = getFirebaseErrorMessage(err.code);
+      setErrors({ [field]: message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
+    <div className="relative flex flex-col flex-1">
       <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
         <Link
           to="/"
@@ -30,8 +98,14 @@ export default function SignUpForm() {
             </p>
           </div>
           <div>
+            {errors.general && <p className="mb-4 text-sm text-red-500">{errors.general}</p>}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
-              {/* <button className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
+              <button 
+                type="button"
+                onClick={handleGoogleRegister}
+                disabled={loading}
+                className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
+              >
                 <svg
                   width="20"
                   height="20"
@@ -57,22 +131,10 @@ export default function SignUpForm() {
                   />
                 </svg>
                 Registrar con Google
-              </button> */}
-              {/* <button className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
-                <svg
-                  width="21"
-                  className="fill-current"
-                  height="20"
-                  viewBox="0 0 21 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M15.6705 1.875H18.4272L12.4047 8.75833L19.4897 18.125H13.9422L9.59717 12.4442L4.62554 18.125H1.86721L8.30887 10.7625L1.51221 1.875H7.20054L11.128 7.0675L15.6705 1.875ZM14.703 16.475H16.2305L6.37054 3.43833H4.73137L14.703 16.475Z" />
-                </svg>
-                Registrar con X
-              </button> */}
+              </button>
             </div>
-            {/* <div className="relative py-3 sm:py-5">
+            
+            <div className="relative py-3 sm:py-5">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
               </div>
@@ -81,8 +143,9 @@ export default function SignUpForm() {
                   O
                 </span>
               </div>
-            </div> */}
-            <form>
+            </div>
+
+            <form onSubmit={handleEmailRegister}>
               <div className="space-y-5">
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   {/* <!-- First Name --> */}
@@ -94,7 +157,11 @@ export default function SignUpForm() {
                       type="text"
                       id="fname"
                       name="fname"
-                      placeholder="Ingresa tu nombre"
+                      placeholder="Ingresa tu primer nombre"
+                      value={fname}
+                      onChange={(e: any) => setFname(e.target.value)}
+                      error={!!errors.fname}
+                      hint={errors.fname}
                     />
                   </div>
                   {/* <!-- Last Name --> */}
@@ -107,6 +174,10 @@ export default function SignUpForm() {
                       id="lname"
                       name="lname"
                       placeholder="Ingresa tu apellido"
+                      value={lname}
+                      onChange={(e: any) => setLname(e.target.value)}
+                      error={!!errors.lname}
+                      hint={errors.lname}
                     />
                   </div>
                 </div>
@@ -119,7 +190,11 @@ export default function SignUpForm() {
                     type="email"
                     id="email"
                     name="email"
-                    placeholder="Ingresa tu email"
+                    placeholder="Ingresa tu correo"
+                    value={email}
+                    onChange={(e: any) => setEmail(e.target.value)}
+                    error={!!errors.email}
+                    hint={errors.email}
                   />
                 </div>
                 {/* <!-- Password --> */}
@@ -131,6 +206,9 @@ export default function SignUpForm() {
                     <Input
                       placeholder="Ingresa tu contraseña"
                       type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e: any) => setPassword(e.target.value)}
+                      error={!!errors.password}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -143,29 +221,78 @@ export default function SignUpForm() {
                       )}
                     </span>
                   </div>
+                  {errors.password && (
+                    <p className="mt-1.5 text-xs text-error-500">
+                      {errors.password}
+                    </p>
+                  )}
+                </div>
+                {/* <!-- Confirm Password --> */}
+                <div>
+                  <Label>
+                    Confirmar Contraseña<span className="text-error-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      placeholder="Confirma tu contraseña"
+                      type={showPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e: any) => setConfirmPassword(e.target.value)}
+                      error={!!errors.confirmPassword}
+                    />
+                    <span
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
+                    >
+                      {showPassword ? (
+                        <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
+                      ) : (
+                        <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
+                      )}
+                    </span>
+                  </div>
+                  {errors.confirmPassword && (
+                    <p className="mt-1.5 text-xs text-error-500">
+                      {errors.confirmPassword}
+                    </p>
+                  )}
                 </div>
                 {/* <!-- Checkbox --> */}
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    className="w-5 h-5"
-                    checked={isChecked}
-                    onChange={setIsChecked}
-                  />
-                  <p className="inline-block font-normal text-gray-500 dark:text-gray-400">
-                    Al crear esta cuenta estoy de acuerdo con los{' '}
-                    <span className="text-gray-800 dark:text-white/90">
-                      Términos y Condiciones,
-                    </span>{' '}
-                    y nuestra{' '}
-                    <span className="text-gray-800 dark:text-white">
-                      Política de Privacidad
-                    </span>
-                  </p>
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      className={`w-5 h-5 cursor-pointer ${errors.terms ? 'border-error-500' : ''}`}
+                      checked={isChecked}
+                      onChange={(checked) => {
+                        if (checked) {
+                          setIsTermsModalOpen(true);
+                        } else {
+                          setIsChecked(false);
+                        }
+                      }}
+                    />
+                    <p className="inline-block font-normal text-gray-500 dark:text-gray-400">
+                      Al crear esta cuenta estoy de acuerdo con los{' '}
+                      <span 
+                        className="text-brand-500 hover:text-brand-600 cursor-pointer underline dark:text-brand-400"
+                        onClick={() => setIsTermsModalOpen(true)}
+                      >
+                        Términos y Condiciones
+                      </span>
+                    </p>
+                  </div>
+                  {errors.terms && (
+                    <p className="text-xs text-error-500">{errors.terms}</p>
+                  )}
                 </div>
                 {/* <!-- Button --> */}
                 <div>
-                  <button className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
-                    Registrarse
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
+                  >
+                    {loading ? 'Cargando...' : 'Registrarse'}
                   </button>
                 </div>
               </div>
@@ -183,27 +310,37 @@ export default function SignUpForm() {
               </p>
             </div>
           </div>
-          <Link
-            to="https://wde.secretarialuz.org/wde/index.html"
-            className="absolute left-4 bottom-4 flex items-center gap-4"
-          >
-            <img
-              width={140}
-              height={48}
-              className="dark:hidden"
-              src="/images/logo/LUZ.png"
-              alt="Logo"
-            />
-            <img
-              width={140}
-              height={48}
-              className="hidden dark:block"
-              src="/images/logo/LUZ-dark.png"
-              alt="Logo-dark"
-            />
-          </Link>
         </div>
       </div>
+
+      <Modal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} className="max-w-[600px] p-6">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white/90 mb-4">Términos y Condiciones</h3>
+        <div className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-h-60 overflow-y-auto space-y-3">
+          <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+          </p>
+          <p>
+            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+          </p>
+          <p>
+            Al aceptar estos términos, confirmas que has leído y comprendido las políticas de uso de esta herramienta de ingeniería, y que los cálculos proporcionados deben ser verificados por un profesional certificado.
+          </p>
+        </div>
+        <div className="flex justify-end gap-3 mt-4">
+          <Button variant="outline" size="sm" onClick={() => setIsTermsModalOpen(false)}>
+            Cancelar
+          </Button>
+          <Button 
+            size="sm"
+            onClick={() => { 
+              setIsChecked(true); 
+              setIsTermsModalOpen(false); 
+            }}
+          >
+            He leído y Acepto
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

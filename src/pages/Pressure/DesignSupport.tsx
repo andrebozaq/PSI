@@ -11,6 +11,8 @@ import ComponentCard from '../../components/common/ComponentCard';
 import PageBreadCrumb from '../../components/common/PageBreadCrumb';
 import PageMeta from '../../components/common/PageMeta';
 import PaginationWithTextAndIcon from '../../components/ui/pagination/PaginationWithTextAndIcon';
+import { Modal } from '../../components/ui/modal';
+import { useLocation } from 'react-router';
 import GeometryCard from './components/GeometryCard';
 import WindCard from './components/WindCard';
 import SeismicCard from './components/SeismicCard';
@@ -30,6 +32,9 @@ const Saddle = lazy(() => import('./supports/Saddle'));
 const Lug = lazy(() => import('./supports/Lug'));
 const RingSupport = lazy(() => import('./supports/RingSupport'));
 const Anchoring = lazy(() => import('./supports/Anchoring'));
+import { useAuth } from '../../contexts/AuthContext';
+import { db } from '../../lib/firebaseConfig';
+import { collection, addDoc, serverTimestamp, getDocs } from 'firebase/firestore';
 
 type UnitSystem = 'SI' | 'US';
 
@@ -52,6 +57,7 @@ type GeneralInfoForm = {
   vesselType: string;
   orientation: string;
   supportType: string;
+  mode?: 'design' | 'analysis';
   // Geometry & weight
   outerDiameter?: string;
   length?: string;
@@ -167,6 +173,7 @@ const initialForm: GeneralInfoForm = {
   vesselType: 'Horizontal',
   orientation: 'Horizontal',
   supportType: 'Saddle',
+  mode: 'design',
   outerDiameter: '',
   length: '',
   height: '',
@@ -292,15 +299,20 @@ const convertTemperature = (
   return formatNumber(converted);
 };
 
-export default function DesignSupport() {
-  /**
-  * Objetivo: orquestar el wizard completo de diseño estructural de soportes.
-  * Entradas: interacciones del usuario sobre formulario, selección de soporte y unidades.
-  * Salida: snapshot de cálculo actualizado por etapas y vista final de reporte.
-  * Norma/Criterio: flujo por etapas (lightweight → block → final) con sincronía de campos.
-   */
+interface DesignSupportProps {
+  mode?: 'design' | 'analysis';
+}
+
+export default function DesignSupport({ mode = 'design' }: DesignSupportProps = {}) {
+  const { currentUser } = useAuth();
+  const location = useLocation();
+  const [projectId, setProjectId] = useState<string | null>(null);
+  
   const [unitSystem, setUnitSystem] = useState<UnitSystem>('SI');
-  const [form, setForm] = useState<GeneralInfoForm>(initialForm);
+  const [form, setForm] = useState<GeneralInfoForm>(() => ({
+    ...initialForm,
+    mode: mode,
+  }));
   const [step, setStep] = useState(1);
   const [calculationSnapshot, setCalculationSnapshot] =
     useState<CalculationSnapshot>(createEmptySnapshot);
@@ -313,6 +325,47 @@ export default function DesignSupport() {
   );
   const [animDir, setAnimDir] = useState<'left' | 'right'>('right');
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [saveModalMessage, setSaveModalMessage] = useState('');
+
+  useEffect(() => {
+    if (location.state?.project) {
+      const p = location.state.project;
+      setProjectId(p.id);
+      setUnitSystem(p.unitSystem || 'SI');
+      if (p.inputs) {
+        setForm(p.inputs);
+        // Force evaluation so steps preview correctly
+        setPreviewVesselType(p.inputs.vesselType);
+        setPreviewSupportType(p.inputs.supportType);
+      }
+      if (p.results) {
+        setCalculationSnapshot(p.results);
+      }
+      if (location.state.jumpToStep) {
+        setStep(location.state.jumpToStep);
+      }
+    }
+  }, [location.state]);
+
+  const [materialsList, setMaterialsList] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'materials'));
+        const materials = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setMaterialsList(materials);
+      } catch (error) {
+        console.error("Error al cargar la librería de materiales:", error);
+      }
+    };
+
+    fetchMaterials();
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -448,6 +501,7 @@ export default function DesignSupport() {
   };
 
   const handleBlur = (key: string) => {
+    console.debug('Blurred', key);
     // Warning will be shown based on touched and empty value
   };
 
@@ -518,18 +572,35 @@ export default function DesignSupport() {
     setUnitSystem(nextUnit);
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nextSnapshot = runBlockStage(
       { ...(form as unknown as DesignInputs), unitSystem } as DesignInputs,
       calculationSnapshot,
     );
     setCalculationSnapshot(nextSnapshot);
-    console.info('General design basis saved', {
-      form,
-      unitSystem,
-      calculationSnapshot: nextSnapshot,
-    });
+    
+    if (currentUser) {
+      try {
+        const docRef = await addDoc(collection(db, 'studies'), {
+          userId: currentUser.uid,
+          userEmail: currentUser.email,
+          projectName: form.projectName || 'Sin título',
+          mode: form.mode || mode,
+          unitSystem: unitSystem,
+          supportType: form.supportType,
+          inputs: form,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+        console.info('Proyecto guardado en Firestore con ID: ', docRef.id);
+        alert('Proyecto guardado con éxito');
+      } catch (e) {
+        console.error("Error al guardar en Firebase: ", e);
+      }
+    } else {
+      console.warn("No hay usuario logueado. El cálculo solo existe en memoria local.");
+    }
   };
 
   const moveToStep = (targetStep: number) => {
@@ -732,6 +803,7 @@ export default function DesignSupport() {
           handleFocus={handleFocus}
           handleBlur={handleBlur}
           touched={touched}
+          dbMaterials={materialsList}
         />
         <WindCard
           form={form}
@@ -960,6 +1032,8 @@ export default function DesignSupport() {
               form={form}
               onFieldChange={handleSupportFieldChange}
               unitSystem={unitSystem}
+              dbMaterials={materialsList}
+              mode={form.mode || mode}
             />
           );
         if (/^Leg/i.test(supportTypeKey))
@@ -968,6 +1042,7 @@ export default function DesignSupport() {
               form={form}
               onFieldChange={handleSupportFieldChange}
               unitSystem={unitSystem}
+              mode={form.mode || mode}
             />
           );
         if (/Saddle/i.test(supportTypeKey))
@@ -976,6 +1051,7 @@ export default function DesignSupport() {
               form={form}
               onFieldChange={handleSupportFieldChange}
               unitSystem={unitSystem}
+              mode={form.mode || mode}
             />
           );
         if (/Lug/i.test(supportTypeKey))
@@ -984,6 +1060,7 @@ export default function DesignSupport() {
               form={form}
               onFieldChange={handleSupportFieldChange}
               unitSystem={unitSystem}
+              mode={form.mode || mode}
             />
           );
         if (
@@ -995,6 +1072,7 @@ export default function DesignSupport() {
               form={form}
               onFieldChange={handleSupportFieldChange}
               unitSystem={unitSystem}
+              mode={form.mode || mode}
             />
           );
         return (
@@ -1020,6 +1098,7 @@ export default function DesignSupport() {
                   form={form}
                   onFieldChange={handleSupportFieldChange}
                   unitSystem={unitSystem}
+                  dbMaterials={materialsList}
                 />
               </div>
             </div>
@@ -1056,6 +1135,7 @@ export default function DesignSupport() {
             form={form}
             onFieldChange={handleSupportFieldChange}
             unitSystem={unitSystem}
+            dbMaterials={materialsList}
           />
         </Suspense>
       );
@@ -1065,11 +1145,49 @@ export default function DesignSupport() {
       console.log('[DesignSupport][summary-snapshot]', calculationSnapshot);
       return (
         <SummaryReport
+          mode={form.mode || mode}
           form={form}
           unitSystem={unitSystem}
           lightweight={calculationSnapshot.lightweight}
           block={calculationSnapshot.block}
           final={calculationSnapshot.final}
+          onSave={async () => {
+            if (!currentUser) return;
+            try {
+              const { doc, updateDoc, collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+              const projectData = {
+                userId: currentUser.uid,
+                projectName: form.projectName || 'Sin título',
+                supportType: form.supportType,
+                vesselType: form.vesselType,
+                mode: form.mode || mode,
+                unitSystem,
+                inputs: form,
+                results: calculationSnapshot,
+              };
+
+              if (projectId) {
+                await updateDoc(doc(db, 'studies', projectId), {
+                  ...projectData,
+                  updatedAt: serverTimestamp(),
+                });
+                setSaveModalMessage('¡Proyecto actualizado con éxito!');
+                setIsSaveModalOpen(true);
+              } else {
+                const docRef = await addDoc(collection(db, 'studies'), {
+                  ...projectData,
+                  createdAt: serverTimestamp(),
+                });
+                setProjectId(docRef.id);
+                setSaveModalMessage('¡Proyecto guardado con éxito!');
+                setIsSaveModalOpen(true);
+              }
+            } catch (error) {
+              console.error('Error al guardar el proyecto:', error);
+              setSaveModalMessage('Hubo un error al guardar el proyecto.');
+              setIsSaveModalOpen(true);
+            }
+          }}
         />
       );
     }
@@ -1085,8 +1203,8 @@ export default function DesignSupport() {
   return (
     <>
       <PageMeta
-        title="Pressure Vessel Design | General Information"
-        description="Capture design basis and unit system before configuring vessel-specific details."
+        title={form.mode === 'analysis' ? "Análisis de soportes | PSI" : "Diseño de soportes | PSI"}
+        description={form.mode === 'analysis' ? "Análisis y verificación estructural de soportes." : "Diseño y cálculo de soportes para recipientes a presión."}
       />
 
       {/* Header visible only when printing */}
@@ -1118,14 +1236,15 @@ export default function DesignSupport() {
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4 print:hidden">
         <div className="space-y-2">
-          <PageBreadCrumb pageTitle="Diseño de soportes" />
+          <PageBreadCrumb pageTitle={form.mode === 'analysis' ? "Análisis de soportes" : "Diseño de soportes"} />
           <div>
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
               {step}. {stepTitles[step - 1]}
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Ingrese las bases de diseño e información globales. Luego proceda a escoger el tipo
-              de recipiente y su soporte.
+              {form.mode === 'analysis'
+                ? "Ingrese las bases de diseño y dimensiones del soporte actual para su posterior verificación."
+                : "Ingrese las bases de diseño e información globales. Luego proceda a escoger el tipo de recipiente y su soporte."}
             </p>
           </div>
         </div>
@@ -1206,6 +1325,31 @@ export default function DesignSupport() {
           </div>
         </ComponentCard>
       </div>
+
+      <Modal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        className="max-w-[400px] p-6 text-center"
+        showCloseButton={false}
+      >
+        <div className="mb-4 flex justify-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400">
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        </div>
+        <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">Operación Exitosa</h3>
+        <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+          {saveModalMessage}
+        </p>
+        <button
+          onClick={() => setIsSaveModalOpen(false)}
+          className="w-full rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white shadow-theme-sm transition hover:bg-brand-600"
+        >
+          Aceptar
+        </button>
+      </Modal>
     </>
   );
 }
