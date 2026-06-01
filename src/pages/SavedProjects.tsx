@@ -17,6 +17,8 @@ export default function SavedProjects() {
   const [projectToDelete, setProjectToDelete] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [supportFilter, setSupportFilter] = useState('Todos');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const getProjectStatus = (project: any) => {
     const rows = project.results?.final?.verificationRows;
@@ -118,6 +120,12 @@ export default function SavedProjects() {
     return matchesSearch && matchesFilter;
   });
 
+  const totalItems = filteredProjects.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentProjects = filteredProjects.slice(startIndex, endIndex);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -136,13 +144,19 @@ export default function SavedProjects() {
               type="text"
               placeholder="Buscar proyecto..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
               className="h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-sm text-gray-700 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-brand-500"
             />
           </div>
           <select
             value={supportFilter}
-            onChange={(e) => setSupportFilter(e.target.value)}
+            onChange={(e) => {
+              setSupportFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             className="h-10 rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-700 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-brand-500"
           >
             <option value="Todos">Todos los soportes</option>
@@ -199,7 +213,7 @@ export default function SavedProjects() {
                 </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-gray-200 dark:divide-gray-800">
-                {filteredProjects.map((project) => (
+                {currentProjects.map((project) => (
                   <TableRow key={project.id} className="transition hover:bg-gray-50 dark:hover:bg-white/[0.02]">
                     <TableCell className="whitespace-nowrap px-6 py-4">
                       <div className="font-medium text-gray-900 dark:text-white">
@@ -225,25 +239,42 @@ export default function SavedProjects() {
                     </TableCell>
                     <TableCell className="whitespace-nowrap px-6 py-4">
                       {(() => {
-                        const status = getProjectStatus(project);
-                        if (status === 'Cumple') {
-                          return <Badge color="success" variant="light">🟢 Cumple</Badge>;
+                        const status = project.calculationStatus;
+                        if (status === 'PASS') {
+                          return (
+                            <div className="flex items-center gap-2.5 pl-1">
+                              <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.2)]" />
+                              <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Cumple</span>
+                            </div>
+                          );
                         }
-                        if (status === 'No cumple') {
-                          return <Badge color="error" variant="light">🔴 No cumple</Badge>;
+                        if (status === 'FAIL' || status === 'ERROR') {
+                          return (
+                            <div className="flex items-center gap-2.5 pl-1">
+                              <span className="h-2 w-2 rounded-full bg-red-500 shadow-[0_0_0_4px_rgba(239,68,68,0.2)]" />
+                              <span className="text-sm font-medium text-red-700 dark:text-red-400">No cumple</span>
+                            </div>
+                          );
                         }
-                        return <Badge color="warning" variant="light">🟡 Pendiente</Badge>;
+                        return (
+                          <div className="flex items-center gap-2.5 pl-1">
+                            <span className="h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_0_4px_rgba(245,158,11,0.2)]" />
+                            <span className="text-sm font-medium text-amber-700 dark:text-amber-400">Pendiente</span>
+                          </div>
+                        );
                       })()}
                     </TableCell>
                     <TableCell className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-3">
-                        <button
-                          title="Ver Reporte"
-                          onClick={() => navigate('/soporte-diseno', { state: { project, jumpToStep: 7 } })}
-                          className="text-gray-500 hover:text-brand-500 dark:text-gray-400 dark:hover:text-brand-400 transition"
-                        >
-                          <FiFileText size={18} />
-                        </button>
+                        {project.mode !== 'analysis' && (
+                          <button
+                            title="Ver Reporte"
+                            onClick={() => navigate('/soporte-diseno', { state: { project, jumpToStep: 7 } })}
+                            className="text-gray-500 hover:text-brand-500 dark:text-gray-400 dark:hover:text-brand-400 transition"
+                          >
+                            <FiFileText size={18} />
+                          </button>
+                        )}
                         <button
                           title="Duplicar"
                           onClick={() => handleDuplicate(project)}
@@ -253,7 +284,7 @@ export default function SavedProjects() {
                         </button>
                         <button
                           title="Editar"
-                          onClick={() => navigate('/soporte-diseno', { state: { project } })}
+                          onClick={() => navigate(project.mode === 'analysis' ? '/soporte-analisis-editor' : '/soporte-diseno', { state: { project } })}
                           className="text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition"
                         >
                           <FiEdit size={18} />
@@ -276,6 +307,32 @@ export default function SavedProjects() {
             </Table>
           )}
         </div>
+        
+        {totalItems > 0 && (
+          <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-900/50">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Mostrando {startIndex + 1} a {Math.min(endIndex, totalItems)} de {totalItems} proyectos
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                Anterior
+              </button>
+              <button
+                type="button"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <Modal

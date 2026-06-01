@@ -94,9 +94,9 @@ const Lug: React.FC<{
         <div className="inline-flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-900">
           <button
             type="button"
-            onClick={() => onFieldChange('lugGusset', false)}
+            onClick={() => onFieldChange('lugGusset', 'false')}
             className={`rounded-md px-3 py-1.5 text-sm font-semibold transition ${
-              !form.lugGusset
+              form.lugGusset === 'false' || !form.lugGusset
                 ? 'bg-brand-500 text-white shadow-theme-sm'
                 : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'
             }`}
@@ -105,9 +105,9 @@ const Lug: React.FC<{
           </button>
           <button
             type="button"
-            onClick={() => onFieldChange('lugGusset', true)}
+            onClick={() => onFieldChange('lugGusset', 'true')}
             className={`rounded-md px-3 py-1.5 text-sm font-semibold transition ${
-              form.lugGusset
+              form.lugGusset === 'true'
                 ? 'bg-brand-500 text-white shadow-theme-sm'
                 : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'
             }`}
@@ -117,18 +117,20 @@ const Lug: React.FC<{
         </div>
       </div>
 
-      {form.lugGusset && (
-        <label className="text-sm text-gray-600 dark:text-gray-300">
-          Espesor del refuerzo ({lengthUnit})
-          <input
-            type="number"
-            value={form.lugGussetThickness || ''}
-            onChange={(e) =>
-              onFieldChange('lugGussetThickness', e.target.value)
-            }
-            className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
-          />
-        </label>
+      {form.lugGusset === 'true' && (
+        <div className="space-y-2">
+          <label className="text-sm text-gray-600 dark:text-gray-300">
+            Espesor del refuerzo ({lengthUnit})
+            <input
+              type="number"
+              value={form.lugGussetThickness || ''}
+              onChange={(e) =>
+                onFieldChange('lugGussetThickness', e.target.value)
+              }
+              className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
+            />
+          </label>
+        </div>
       )}
 
       <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -136,9 +138,9 @@ const Lug: React.FC<{
         <div className="inline-flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-900">
           <button
             type="button"
-            onClick={() => onFieldChange('lugPadPlate', false)}
+            onClick={() => onFieldChange('lugPadPlate', 'false')}
             className={`rounded-md px-3 py-1.5 text-sm font-semibold transition ${
-              !form.lugPadPlate
+              form.lugPadPlate === 'false' || !form.lugPadPlate
                 ? 'bg-brand-500 text-white shadow-theme-sm'
                 : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'
             }`}
@@ -147,9 +149,9 @@ const Lug: React.FC<{
           </button>
           <button
             type="button"
-            onClick={() => onFieldChange('lugPadPlate', true)}
+            onClick={() => onFieldChange('lugPadPlate', 'true')}
             className={`rounded-md px-3 py-1.5 text-sm font-semibold transition ${
-              form.lugPadPlate
+              form.lugPadPlate === 'true'
                 ? 'bg-brand-500 text-white shadow-theme-sm'
                 : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'
             }`}
@@ -159,8 +161,8 @@ const Lug: React.FC<{
         </div>
       </div>
 
-      {form.lugPadPlate && (
-        <>
+      {form.lugPadPlate === 'true' && (
+        <div className="space-y-2">
           <label className="text-sm text-gray-600 dark:text-gray-300">
             Ancho de la placa de apoyo ({lengthUnit})
             <input
@@ -190,7 +192,7 @@ const Lug: React.FC<{
               className="mt-1 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:text-gray-100"
             />
           </label>
-        </>
+        </div>
       )}
     </div>
   );

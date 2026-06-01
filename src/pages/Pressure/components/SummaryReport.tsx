@@ -128,7 +128,7 @@ export default function SummaryReport({
     if (normalized === 'cumple') {
       return 'font-semibold text-green-700 dark:text-green-400';
     }
-    if (normalized === 'no cumple') {
+    if (normalized === 'no cumple' || normalized === 'error' || normalized === 'falló') {
       return 'font-semibold text-red-700 dark:text-red-400';
     }
     if (normalized === 'revisar' || normalized === 'pendiente') {
@@ -177,7 +177,7 @@ export default function SummaryReport({
         },
       ];
 
-  const calculationVerificationRows = final.verificationRows.length
+  const calculationVerificationRows = (final.verificationRows.length
     ? final.verificationRows
     : [
         {
@@ -204,7 +204,14 @@ export default function SummaryReport({
           allowable: 'Pendiente de cálculo',
           status: 'Pendiente',
         },
-      ];
+      ]).map(row => {
+        const actualStr = String(row.actual).trim().toLowerCase();
+        const isInvalid = actualStr.includes('nan') || actualStr.includes('n/a') || actualStr.includes('infinity');
+        if (isInvalid) {
+          return { ...row, status: 'ERROR' };
+        }
+        return row;
+      });
 
   const normalizedStatuses = calculationVerificationRows.map((row) =>
     String(row.status ?? '').trim().toLowerCase(),
@@ -282,29 +289,27 @@ export default function SummaryReport({
   const displayedNotes = final.notes.slice(0, MAX_NOTES_VISIBLE).map(compactNote);
   const hiddenNotesCount = Math.max(0, final.notes.length - displayedNotes.length);
 
+  const isSuccess = calculationVerificationRows.every(row => {
+    const status = String(row.status ?? '').trim().toLowerCase();
+    return status === 'pass' || status === 'cumple';
+  });
+
   const summaryAlert: {
     variant: 'success' | 'error' | 'warning' | 'info';
     title: string;
     message: string;
-  } = hasNoCumple
+  } = isSuccess
     ? {
-        variant: 'error',
+        variant: 'success',
         title: 'Verificación de diseño',
-        message:
-          `Se detectaron verificaciones en estado NO CUMPLE. Revise los parámetros marcados en rojo.${failedSuffix}`,
+        message: 'Tu diseño pasó exitosamente.',
       }
-    : hasReviewPending
-      ? {
-          variant: 'warning',
-          title: 'Verificación de diseño',
-          message:
-            `El diseño requiere revisión adicional antes de aprobarse (filas en ámbar).${reviewSuffix}`,
-        }
-      : {
-          variant: 'success',
-          title: 'Verificación de diseño',
-          message: 'Tu diseño pasó exitosamente.',
-        };
+    : {
+        variant: 'error',
+        title: 'Verificación fallida',
+        message:
+          'El diseño no cumple con los criterios o contiene parámetros inválidos (N/A).',
+      };
 
   const handlePrint = () => {
     /**

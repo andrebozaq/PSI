@@ -582,6 +582,17 @@ export default function DesignSupport({ mode = 'design' }: DesignSupportProps = 
     
     if (currentUser) {
       try {
+        const finalChecks = calculationSnapshot.final.verificationRows || [];
+        let calcStatus = 'PENDING';
+        if (finalChecks.length > 0) {
+          const isPass = finalChecks.every(r => String(r.status).trim().toLowerCase() === 'cumple');
+          const hasError = finalChecks.some(r => {
+            const actualStr = String(r.actual).toLowerCase();
+            return actualStr.includes('nan') || actualStr.includes('n/a') || actualStr.includes('infinity');
+          });
+          calcStatus = hasError ? 'ERROR' : isPass ? 'PASS' : 'FAIL';
+        }
+
         const docRef = await addDoc(collection(db, 'studies'), {
           userId: currentUser.uid,
           userEmail: currentUser.email,
@@ -590,6 +601,7 @@ export default function DesignSupport({ mode = 'design' }: DesignSupportProps = 
           unitSystem: unitSystem,
           supportType: form.supportType,
           inputs: form,
+          calculationStatus: calcStatus,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
@@ -1155,6 +1167,17 @@ export default function DesignSupport({ mode = 'design' }: DesignSupportProps = 
             if (!currentUser) return;
             try {
               const { doc, updateDoc, collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+              const finalChecks = calculationSnapshot.final.verificationRows || [];
+              let calcStatus = 'PENDING';
+              if (finalChecks.length > 0) {
+                const isPass = finalChecks.every(r => String(r.status).trim().toLowerCase() === 'cumple');
+                const hasError = finalChecks.some(r => {
+                  const actualStr = String(r.actual).toLowerCase();
+                  return actualStr.includes('nan') || actualStr.includes('n/a') || actualStr.includes('infinity');
+                });
+                calcStatus = hasError ? 'ERROR' : isPass ? 'PASS' : 'FAIL';
+              }
+
               const projectData = {
                 userId: currentUser.uid,
                 projectName: form.projectName || 'Sin título',
@@ -1164,6 +1187,7 @@ export default function DesignSupport({ mode = 'design' }: DesignSupportProps = 
                 unitSystem,
                 inputs: form,
                 results: calculationSnapshot,
+                calculationStatus: calcStatus,
               };
 
               if (projectId) {

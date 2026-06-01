@@ -12,6 +12,12 @@ import Legs from './supports/Legs';
 import Lug from './supports/Lug';
 import RingSupport from './supports/RingSupport';
 import { ChevronDownIcon } from '../../icons';
+import { runFinalStage } from './supports/DesignCalculations/DesignEngine';
+import { Modal } from '../../components/ui/modal';
+import { collection, query, where, getDocs, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../lib/firebaseConfig';
+import { useAuth } from '../../contexts/AuthContext';
+import { useLocation } from 'react-router';
 
 // Simple form shape aligned with the existing support inputs
 type FormState = Record<string, string> & {
@@ -22,21 +28,25 @@ type FormState = Record<string, string> & {
 
 type AnalysisCheck = {
   name: string;
-  status: 'PASS' | 'FAIL';
+  status: 'PASS' | 'FAIL' | 'PENDING' | 'REVIEW';
   ratio: number;
   value: string;
   limit: string;
 };
 
 type AnalysisResult = {
-  status: 'PASS' | 'FAIL';
+  status: 'PASS' | 'FAIL' | 'PENDING' | 'REVIEW';
   governingRatio: number;
   governingCheck: string;
   checks: AnalysisCheck[];
 };
 
-const displayStatus = (status: 'PASS' | 'FAIL') =>
-  status === 'PASS' ? 'PASÓ' : 'FALLÓ';
+const displayStatus = (status: 'PASS' | 'FAIL' | 'PENDING' | 'REVIEW') => {
+  if (status === 'PASS') return 'PASÓ';
+  if (status === 'FAIL') return 'FALLÓ';
+  if (status === 'REVIEW') return 'REVISAR';
+  return 'PENDIENTE';
+};
 
 const supportOptionsByVessel: Record<string, { id: string; label: string }[]> =
   {
@@ -59,33 +69,33 @@ const supportOptionsByVessel: Record<string, { id: string; label: string }[]> =
   };
 
 const defaultForm: FormState = {
-  projectName: 'V-201 Ammoniaco',
+  projectName: '',
   vesselType: 'Horizontal',
   supportType: 'Saddle',
   designCode: 'ASME/ASCE',
-  designPressure: '1.2',
-  designTemperature: '80',
-  corrosionAllowance: '1.5',
+  designPressure: '',
+  designTemperature: '',
+  corrosionAllowance: '',
   windAuto: 'Zone 2',
-  windValue: '0.85',
+  windValue: '',
   exposureCategory: 'C',
   windImportanceFactor: '1.0',
   seismicSiteClass: 'D',
-  seismicSs: '0.7',
-  seismicS1: '0.25',
+  seismicSs: '',
+  seismicS1: '',
   seismicR: '3.5',
-  outerDiameter: '2400',
-  length: '8000',
-  wallThickness: '16',
-  insulationThickness: '50',
+  outerDiameter: '',
+  length: '',
+  wallThickness: '',
+  insulationThickness: '',
   liquidLevelPercent: '100',
-  fluidSpecificGravity: '0.9',
-  saddleHeight: '450',
-  saddleLocation: '1200',
+  fluidSpecificGravity: '',
+  saddleHeight: '',
+  saddleLocation: '',
   saddleContactAngle: '120',
-  saddleWebThickness: '10',
-  saddleBasePlateWidth: '450',
-  saddleBasePlateLength: '900',
+  saddleWebThickness: '',
+  saddleBasePlateWidth: '',
+  saddleBasePlateLength: '',
   saddleFrictionType: 'Frictionless',
   wearPlateEnabled: 'false',
   wearPlateWidth: '',
@@ -154,119 +164,60 @@ const defaultForm: FormState = {
   ringBoltCircle: '',
 };
 
-const savedCases: {
-  id: string;
-  name: string;
-  note: string;
-  form: FormState;
-}[] = [
-  {
-    id: 'case-201',
-    name: 'V-201 Ammoníaco',
-    note: 'Carga de viento moderada, espesor bajo (fallando)',
-    form: defaultForm,
-  },
-  {
-    id: 'case-202',
-    name: 'V-202 Urea',
-    note: 'Mayor Ss, espesor reforzado',
-    form: {
-      ...defaultForm,
-      projectName: 'V-202 Urea',
-      windValue: '1.1',
-      seismicSs: '0.9',
-      saddleWebThickness: '14',
-      saddleHeight: '520',
-      wearPlateEnabled: 'true',
-      wearPlateWidth: '320',
-      wearPlateThickness: '12',
-      wearPlateAngle: '130',
-      anchorBoltDiameter: '25',
-      anchorBoltQuantity: '8',
-    },
-  },
-  {
-    id: 'case-301',
-    name: 'T-301 Propano',
-    note: 'Equipo ligero, viento alto',
-    form: {
-      ...defaultForm,
-      projectName: 'T-301 Propano',
-      vesselType: 'Horizontal',
-      windValue: '1.6',
-      wallThickness: '12',
-      saddleWebThickness: '12',
-      length: '6000',
-      wearPlateEnabled: 'false',
-      anchorBoltDiameter: '22',
-      anchorBoltQuantity: '6',
-    },
-  },
-];
 
 const formatNumber = (value: number) => {
   if (!Number.isFinite(value)) return '0.00';
   return value.toFixed(2);
 };
 
-const safeNum = (value: string) => {
-  const n = Number(value);
-  if (!Number.isFinite(n) || n < 0) return 0;
-  return n;
+
+
+const mapStatus = (statusStr: string): 'PASS' | 'FAIL' | 'PENDING' | 'REVIEW' => {
+  if (statusStr === 'Cumple') return 'PASS';
+  if (statusStr === 'No cumple') return 'FAIL';
+  if (statusStr === 'Revisar') return 'REVIEW';
+  return 'PENDING';
 };
 
-const runAnalysis = (form: FormState): AnalysisResult => {
-  const thickness = safeNum(
-    form.saddleWebThickness || form.wallThickness || '0',
-  );
-  const pressure = safeNum(form.designPressure || '0');
-  const wind = safeNum(form.windValue || '0');
-  const seismic =
-    safeNum(form.seismicSs || '0') + safeNum(form.seismicS1 || '0');
-  const diameter = safeNum(form.outerDiameter || '0');
+const mapRowToCheck = (row: any): AnalysisCheck => {
+  const ratioMatch = row.actual.match(/[\d.]+/);
+  const ratio = ratioMatch ? parseFloat(ratioMatch[0]) : 0;
+  return {
+    name: row.check,
+    status: mapStatus(row.status),
+    ratio: ratio,
+    value: row.actual,
+    limit: row.allowable,
+  };
+};
 
-  // Toy formulas to drive UI state; replace with real engine when ready
-  const bendingRatio = Math.abs(
-    (pressure * 0.4 + wind * 0.6) / Math.max(thickness, 1),
-  );
-  const seismicRatio = Math.abs(
-    (seismic * diameter) / Math.max(thickness, 1) / 10,
-  );
-  const bearingRatio = Math.abs(
-    Math.max(pressure, wind) / Math.max(thickness, 1.5),
-  );
+const runRealAnalysis = (form: FormState): AnalysisResult => {
+  const snapshot = runFinalStage(form as any);
+  const rows = snapshot.final?.verificationRows || [];
+  
+  if (rows.length === 0) {
+    return {
+      status: 'PENDING',
+      governingRatio: 0,
+      governingCheck: 'Sin chequeos',
+      checks: [],
+    };
+  }
 
-  const checks: AnalysisCheck[] = [
-    {
-      name: 'Flexión local',
-      ratio: bendingRatio,
-      value: formatNumber(bendingRatio),
-      limit: '1.00',
-      status: bendingRatio <= 1 ? 'PASS' : 'FAIL',
-    },
-    {
-      name: 'Sismo / vuelco',
-      ratio: seismicRatio,
-      value: formatNumber(seismicRatio),
-      limit: '1.00',
-      status: seismicRatio <= 1 ? 'PASS' : 'FAIL',
-    },
-    {
-      name: 'Soporte',
-      ratio: bearingRatio,
-      value: formatNumber(bearingRatio),
-      limit: '1.00',
-      status: bearingRatio <= 1 ? 'PASS' : 'FAIL',
-    },
-  ];
-
+  const checks = rows.map(mapRowToCheck);
+  
   const governing = checks.reduce(
     (max, c) => (c.ratio > max.ratio ? c : max),
     checks[0],
   );
 
+  let overallStatus: 'PASS' | 'FAIL' | 'PENDING' | 'REVIEW' = 'PASS';
+  if (checks.some(c => c.status === 'FAIL')) overallStatus = 'FAIL';
+  else if (checks.some(c => c.status === 'REVIEW')) overallStatus = 'REVIEW';
+  else if (checks.some(c => c.status === 'PENDING')) overallStatus = 'PENDING';
+
   return {
-    status: governing.ratio <= 1 ? 'PASS' : 'FAIL',
+    status: overallStatus,
     governingRatio: governing.ratio,
     governingCheck: governing.name,
     checks,
@@ -274,16 +225,58 @@ const runAnalysis = (form: FormState): AnalysisResult => {
 };
 
 export default function AnalysisDashboard() {
+  const { currentUser } = useAuth();
+  const location = useLocation();
   const [unitSystem, setUnitSystem] = useState<'SI' | 'US'>('SI');
   const [form, setForm] = useState<FormState>(defaultForm);
-  const [activeCaseId, setActiveCaseId] = useState<string>('case-201');
+  const [activeCaseId, setActiveCaseId] = useState<string>('new');
   const [isStatusExpanded, setIsStatusExpanded] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [projectSearch, setProjectSearch] = useState('');
   const [result, setResult] = useState<AnalysisResult>(() =>
-    runAnalysis(defaultForm),
+    runRealAnalysis(defaultForm),
   );
 
+  const [savedProjects, setSavedProjects] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [saveModalMessage, setSaveModalMessage] = useState('');
+
   useEffect(() => {
-    setResult(runAnalysis(form));
+    const fetchData = async () => {
+      if (!currentUser) {
+        setIsLoadingData(false);
+        return;
+      }
+      try {
+        const [matsSnap, projsSnap] = await Promise.all([
+          getDocs(collection(db, 'materials')),
+          getDocs(query(collection(db, 'studies'), where('userId', '==', currentUser.uid)))
+        ]);
+        const loadedProjects = projsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter((p: any) => p.mode === 'analysis');
+        setSavedProjects(loadedProjects);
+        
+        const projectFromState = location.state?.project;
+        if (projectFromState) {
+          const found = loadedProjects.find(p => p.id === projectFromState.id);
+          if (found) {
+            setActiveCaseId(found.id);
+            if (found.inputs) setForm(found.inputs);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+    fetchData();
+  }, [currentUser]);
+
+
+  useEffect(() => {
+    setResult(runRealAnalysis(form));
   }, [form]);
 
   // Keep support type constrained to vessel-specific options (align with DesignSupport logic)
@@ -312,21 +305,98 @@ export default function AnalysisDashboard() {
   };
 
   const loadCase = (caseId: string) => {
-    const found = savedCases.find((c) => c.id === caseId);
-    if (!found) return;
     setActiveCaseId(caseId);
-    setForm(found.form);
+    if (caseId === 'new') {
+      setForm(defaultForm);
+      return;
+    }
+    const found = savedProjects.find((c) => c.id === caseId);
+    if (found && found.inputs) {
+      setForm(found.inputs);
+    }
   };
 
   const resetCurrent = () => {
-    setForm(savedCases.find((c) => c.id === activeCaseId)?.form ?? defaultForm);
+    if (activeCaseId === 'new') setForm(defaultForm);
+    else setForm(savedProjects.find((c) => c.id === activeCaseId)?.inputs ?? defaultForm);
+  };
+
+  const handleSave = async () => {
+    if (!currentUser) return;
+    if (!form.projectName?.trim()) {
+      setSaveModalMessage('Por favor, asigne un nombre al proyecto antes de guardar');
+      setIsSaveModalOpen(true);
+      return;
+    }
+    try {
+      const projectData = {
+        userId: currentUser.uid,
+        projectName: form.projectName || 'Análisis sin título',
+        supportType: form.supportType,
+        vesselType: form.vesselType,
+        mode: 'analysis',
+        unitSystem,
+        inputs: form,
+        results: { final: result },
+        calculationStatus: result.status,
+      };
+
+      if (activeCaseId && activeCaseId !== 'new') {
+        await updateDoc(doc(db, 'studies', activeCaseId), {
+          ...projectData,
+          updatedAt: serverTimestamp(),
+        });
+        setSaveModalMessage('¡Análisis actualizado con éxito!');
+        setIsSaveModalOpen(true);
+      } else {
+        const docRef = await addDoc(collection(db, 'studies'), {
+          ...projectData,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+        setActiveCaseId(docRef.id);
+        setSaveModalMessage('¡Análisis guardado con éxito!');
+        setIsSaveModalOpen(true);
+      }
+
+      const projsSnap = await getDocs(query(collection(db, 'studies'), where('userId', '==', currentUser.uid)));
+      setSavedProjects(projsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter((p: any) => p.mode === 'analysis'));
+    } catch (error) {
+      console.error('Error al guardar:', error);
+      setSaveModalMessage('Hubo un error al guardar el análisis.');
+      setIsSaveModalOpen(true);
+    }
   };
 
   const severityColor = useMemo(() => {
-    return result.status === 'PASS'
-      ? 'bg-green-50 border-green-500 text-green-700'
-      : 'bg-red-50 border-red-500 text-red-700';
+    if (result.status === 'PASS') return 'bg-green-50 border-green-500 text-green-700';
+    if (result.status === 'FAIL') return 'bg-red-50 border-red-500 text-red-700';
+    if (result.status === 'REVIEW') return 'bg-amber-50 border-amber-500 text-amber-700';
+    return 'bg-gray-50 border-gray-500 text-gray-700';
   }, [result.status]);
+
+  const filteredDropdownProjects = useMemo(() => {
+    return savedProjects.filter(p => 
+      (p.projectName || p.name || 'Análisis sin título')
+      .toLowerCase()
+      .includes(projectSearch.toLowerCase())
+    );
+  }, [savedProjects, projectSearch]);
+
+  const activeProjectName = useMemo(() => {
+    if (activeCaseId === 'new') return 'Nuevo Análisis';
+    const proj = savedProjects.find(p => p.id === activeCaseId);
+    return proj ? (proj.projectName || proj.name || 'Análisis sin título') : 'Seleccionar...';
+  }, [activeCaseId, savedProjects]);
+
+  if (isLoadingData) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent"></div>
+        <span className="ml-3 text-sm text-gray-500">Cargando datos...</span>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -459,7 +529,9 @@ export default function AnalysisDashboard() {
                     <span>{check.name}</span>
                     <span
                       className={
-                        check.status === 'PASS' ? 'text-green-600' : 'text-red-600'
+                        check.status === 'PASS' ? 'text-green-600' : 
+                        check.status === 'FAIL' ? 'text-red-600' :
+                        check.status === 'REVIEW' ? 'text-amber-600' : 'text-gray-600'
                       }
                     >
                       {displayStatus(check.status)}
@@ -472,7 +544,7 @@ export default function AnalysisDashboard() {
                     />
                   </div>
                   <div className="mt-2 flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
-                    <span>Ratio: {formatNumber(check.ratio)}</span>
+                    <span>Valor actual: {check.value}</span>
                     <span>Límite: {check.limit}</span>
                   </div>
                 </div>
@@ -487,17 +559,56 @@ export default function AnalysisDashboard() {
         <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 text-sm font-semibold text-gray-800 dark:border-gray-800 dark:text-gray-100 print:hidden">
             <span>Parámetros</span>
-            <select
-              value={activeCaseId}
-              onChange={(e) => loadCase(e.target.value)}
-              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 print:border-none print:bg-transparent print:p-0 print:h-auto print:font-bold print:text-black print:appearance-none"
-            >
-              {savedCases.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative w-64 print:hidden">
+              <div
+                className="flex cursor-pointer items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              >
+                <span className="truncate">{activeProjectName}</span>
+                <ChevronDownIcon className={`size-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </div>
+              
+              {isDropdownOpen && (
+                <div className="absolute right-0 top-full mt-1 z-50 max-h-60 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                  <div className="sticky top-0 bg-white p-2 dark:bg-gray-800">
+                    <input
+                      type="text"
+                      className="w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs outline-none focus:border-brand-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+                      placeholder="Buscar proyecto..."
+                      value={projectSearch}
+                      onChange={(e) => setProjectSearch(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  <div 
+                    className="cursor-pointer px-3 py-2 text-xs hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                    onClick={() => {
+                      loadCase('new');
+                      setIsDropdownOpen(false);
+                      setProjectSearch('');
+                    }}
+                  >
+                    Nuevo Análisis
+                  </div>
+                  {filteredDropdownProjects.map((c) => (
+                    <div
+                      key={c.id}
+                      className={`cursor-pointer px-3 py-2 text-xs hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 ${activeCaseId === c.id ? 'bg-brand-50 text-brand-600 dark:bg-brand-900/20' : ''}`}
+                      onClick={() => {
+                        loadCase(c.id);
+                        setIsDropdownOpen(false);
+                        setProjectSearch('');
+                      }}
+                    >
+                      {c.projectName || c.name || 'Análisis sin título'}
+                    </div>
+                  ))}
+                  {filteredDropdownProjects.length === 0 && (
+                    <div className="px-3 py-2 text-xs text-gray-500">No se encontraron proyectos</div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-4 p-4">
@@ -515,6 +626,13 @@ export default function AnalysisDashboard() {
                 </button>
                 <button
                   type="button"
+                  onClick={handleSave}
+                  className="rounded-md bg-blue-600 px-3 py-1 font-semibold text-white shadow-theme-sm transition hover:bg-blue-700"
+                >
+                  Guardar Análisis
+                </button>
+                <button
+                  type="button"
                   onClick={() => window.print()}
                   className="rounded-md bg-brand-500 px-3 py-1 font-semibold text-white shadow-theme-sm transition hover:bg-brand-600"
                 >
@@ -523,8 +641,21 @@ export default function AnalysisDashboard() {
               </div>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              {savedCases.find((c) => c.id === activeCaseId)?.note}
+              {savedProjects.find((c) => c.id === activeCaseId)?.note}
             </p>
+
+            <div className="space-y-2 pb-2">
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                Nombre del Proyecto / Equipo
+                <input
+                  type="text"
+                  value={form.projectName || ''}
+                  onChange={handleInputChange('projectName')}
+                  placeholder="Ej. V-201 Ammoníaco"
+                  className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm transition focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                />
+              </label>
+            </div>
 
             <div className="space-y-6 print:space-y-0 print:grid print:grid-cols-2 print:gap-x-8 print:gap-y-4">
               <ComponentCard title="Cargas y sitio">
@@ -546,6 +677,7 @@ export default function AnalysisDashboard() {
                   form={form}
                   handleInputChange={handleInputChange}
                   unitSystem={unitSystem}
+                  dbMaterials={materials}
                 />
               </ComponentCard>
 
@@ -580,7 +712,7 @@ export default function AnalysisDashboard() {
                   </label>
                 </div>
 
-                <SupportCommon form={form} onFieldChange={handleFieldChange} />
+                <SupportCommon form={form} onFieldChange={handleFieldChange} dbMaterials={materials} />
                 <div className="mt-2 rounded-lg border border-dashed border-gray-200 p-3 dark:border-gray-700">
                   {(() => {
                     const key = form.supportType || '';
@@ -594,6 +726,7 @@ export default function AnalysisDashboard() {
                           form={form}
                           onFieldChange={handleFieldChange}
                           unitSystem={unitSystem}
+                          dbMaterials={materials}
                         />
                       );
                     if (/Leg/i.test(key))
@@ -640,9 +773,9 @@ export default function AnalysisDashboard() {
                       <span>{check.name}</span>
                       <span
                         className={
-                          check.status === 'PASS'
-                            ? 'text-green-600'
-                            : 'text-red-600'
+                          check.status === 'PASS' ? 'text-green-600' : 
+                          check.status === 'FAIL' ? 'text-red-600' :
+                          check.status === 'REVIEW' ? 'text-amber-600' : 'text-gray-600'
                         }
                       >
                         {displayStatus(check.status)}
@@ -650,12 +783,16 @@ export default function AnalysisDashboard() {
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
                       <div
-                        className={`h-2 rounded-full ${check.status === 'PASS' ? 'bg-green-500' : 'bg-red-500'}`}
+                        className={`h-2 rounded-full ${
+                          check.status === 'PASS' ? 'bg-green-500' : 
+                          check.status === 'FAIL' ? 'bg-red-500' :
+                          check.status === 'REVIEW' ? 'bg-amber-500' : 'bg-gray-500'
+                        }`}
                         style={{ width: `${ratioPercent}%` }}
                       />
                     </div>
                     <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300 font-mono">
-                      <span>Actual: {check.value}</span>
+                      <span>Valor actual: {check.value}</span>
                       <span>Límite: {check.limit}</span>
                     </div>
                   </div>
@@ -679,6 +816,31 @@ export default function AnalysisDashboard() {
           <p>Software: PSI Indicator v1.0</p>
         </div>
       </div>
+
+      <Modal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        className="max-w-[400px] p-6 text-center"
+        showCloseButton={false}
+      >
+        <div className="mb-4 flex justify-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400">
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        </div>
+        <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">Operación Exitosa</h3>
+        <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+          {saveModalMessage}
+        </p>
+        <button
+          onClick={() => setIsSaveModalOpen(false)}
+          className="w-full rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white shadow-theme-sm transition hover:bg-brand-600"
+        >
+          Aceptar
+        </button>
+      </Modal>
     </>
   );
 }
