@@ -213,71 +213,9 @@ export default function SummaryReport({
         return row;
       });
 
-  const normalizedStatuses = calculationVerificationRows.map((row) =>
-    String(row.status ?? '').trim().toLowerCase(),
-  );
-  const hasNoCumple = normalizedStatuses.includes('no cumple');
-  const hasReviewPending = normalizedStatuses.some(
-    (status) => status === 'revisar' || status === 'pendiente',
-  );
 
-  const failedChecks = calculationVerificationRows
-    .slice()
-    .sort((a, b) => {
-      const getPriority = (check: string) => {
-        const text = String(check ?? '').toLowerCase();
-        if (text.includes('anclaje acero')) return 1;
-        if (text.includes('anclaje concreto')) return 2;
-        if (text.includes('distancia al borde')) return 3;
-        if (text.includes('levantamiento')) return 4;
-        if (text.includes('pandeo')) return 5;
-        if (text.includes('flexión') || text.includes('flexion')) return 6;
-        if (text.includes('compresión') || text.includes('compresion')) return 7;
-        if (text.includes('presión') || text.includes('presion')) return 8;
-        if (text.includes('corte')) return 9;
-        return 99;
-      };
-      return getPriority(a.check) - getPriority(b.check);
-    })
-    .filter((row) => String(row.status ?? '').trim().toLowerCase() === 'no cumple')
-    .map((row) => row.check)
-    .slice(0, 3);
 
-  const reviewChecks = calculationVerificationRows
-    .slice()
-    .sort((a, b) => {
-      const getPriority = (check: string) => {
-        const text = String(check ?? '').toLowerCase();
-        if (text.includes('anclaje acero')) return 1;
-        if (text.includes('anclaje concreto')) return 2;
-        if (text.includes('distancia al borde')) return 3;
-        if (text.includes('levantamiento')) return 4;
-        if (text.includes('pandeo')) return 5;
-        if (text.includes('flexión') || text.includes('flexion')) return 6;
-        if (text.includes('compresión') || text.includes('compresion')) return 7;
-        if (text.includes('presión') || text.includes('presion')) return 8;
-        if (text.includes('corte')) return 9;
-        return 99;
-      };
-      return getPriority(a.check) - getPriority(b.check);
-    })
-    .filter((row) => {
-      const status = String(row.status ?? '').trim().toLowerCase();
-      return status === 'revisar' || status === 'pendiente';
-    })
-    .map((row) => row.check)
-    .slice(0, 3);
 
-  const failedSuffix = failedChecks.length
-    ? ` Verificaciones críticas: ${failedChecks.join(', ')}${calculationVerificationRows.filter((row) => String(row.status ?? '').trim().toLowerCase() === 'no cumple').length > failedChecks.length ? ', ...' : ''}.`
-    : '';
-
-  const reviewSuffix = reviewChecks.length
-    ? ` Áreas a revisar: ${reviewChecks.join(', ')}${calculationVerificationRows.filter((row) => {
-        const status = String(row.status ?? '').trim().toLowerCase();
-        return status === 'revisar' || status === 'pendiente';
-      }).length > reviewChecks.length ? ', ...' : ''}.`
-    : '';
 
   const MAX_NOTES_VISIBLE = 8;
   const MAX_NOTE_CHARS = 180;

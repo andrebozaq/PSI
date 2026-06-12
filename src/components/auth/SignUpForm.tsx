@@ -10,6 +10,16 @@ import { Modal } from '../ui/modal';
 import { registerWithEmail, loginWithGoogle } from '../../services/authService';
 import { getFirebaseErrorMessage } from '../../utils/firebaseErrors';
 
+const AVATARS = [
+  '/images/user/owner.png',
+  '/images/user/user-01.png',
+  '/images/user/user-02.png',
+  '/images/user/user-03.png',
+  '/images/user/user-04.png',
+  '/images/user/user-05.png',
+  '/images/user/user-06.png',
+];
+
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
@@ -19,8 +29,10 @@ export default function SignUpForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState(AVATARS[0]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1);
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
@@ -29,7 +41,7 @@ export default function SignUpForm() {
       navigate('/inicio');
     }
   }, [currentUser, navigate]);
-  const handleEmailRegister = async (e: React.FormEvent) => {
+  const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
     if (!fname) newErrors.fname = 'El nombre es obligatorio';
@@ -50,13 +62,19 @@ export default function SignUpForm() {
     }
 
     setErrors({});
+    setStep(2);
+  };
+
+  const handleFinalSubmit = async () => {
     setLoading(true);
+    setErrors({});
     try {
-      await registerWithEmail(email, password, fname, lname);
+      await registerWithEmail(email, password, fname, lname, selectedAvatar);
       navigate('/');
     } catch (err: any) {
       const { field, message } = getFirebaseErrorMessage(err.code);
       setErrors({ [field]: message });
+      setStep(1); // Volver al paso 1 para mostrar el error si ocurre
     } finally {
       setLoading(false);
     }
@@ -89,17 +107,20 @@ export default function SignUpForm() {
       </div>
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
-          <div className="mb-5 sm:mb-8">
+          <div className="mb-5 sm:mb-8 text-center sm:text-left">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Registro
+              {step === 1 ? 'Registro' : 'Elige tu Avatar'}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Ingresa tu email y contraseña para registrarte!
+              {step === 1 ? 'Ingresa tu email y contraseña para registrarte!' : 'Selecciona una imagen que te represente en la comunidad.'}
             </p>
           </div>
           <div>
             {errors.general && <p className="mb-4 text-sm text-red-500">{errors.general}</p>}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
+            
+            {step === 1 ? (
+              <>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
               <button 
                 type="button"
                 onClick={handleGoogleRegister}
@@ -145,7 +166,7 @@ export default function SignUpForm() {
               </div>
             </div>
 
-            <form onSubmit={handleEmailRegister}>
+            <form onSubmit={handleNextStep}>
               <div className="space-y-5">
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   {/* <!-- First Name --> */}
@@ -289,14 +310,50 @@ export default function SignUpForm() {
                 <div>
                   <button 
                     type="submit"
-                    disabled={loading}
-                    className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
+                    className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600"
                   >
-                    {loading ? 'Cargando...' : 'Registrarse'}
+                    Siguiente paso
                   </button>
                 </div>
               </div>
             </form>
+            </>
+            ) : (
+              <div className="space-y-6">
+                <div className="grid grid-cols-3 gap-4 sm:grid-cols-4">
+                  {AVATARS.map((url) => (
+                    <div 
+                      key={url}
+                      onClick={() => setSelectedAvatar(url)}
+                      className={`cursor-pointer rounded-full border-[3px] overflow-hidden aspect-square transition-all mx-auto w-full max-w-[80px] ${
+                        selectedAvatar === url ? 'border-brand-500 scale-110 shadow-lg' : 'border-transparent hover:scale-105 opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={url} alt="avatar option" className="object-cover w-full h-full" />
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="flex gap-3 pt-4">
+                  <button 
+                    type="button"
+                    disabled={loading}
+                    onClick={() => setStep(1)}
+                    className="flex items-center justify-center w-1/3 px-4 py-3 text-sm font-medium text-gray-700 transition rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 disabled:opacity-50"
+                  >
+                    Atrás
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={handleFinalSubmit}
+                    disabled={loading}
+                    className="flex items-center justify-center w-2/3 px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
+                  >
+                    {loading ? 'Completando...' : 'Completar Registro'}
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">

@@ -4,7 +4,8 @@ import {
     sendPasswordResetEmail,
     GoogleAuthProvider,
     signInWithPopup,
-    signOut
+    signOut,
+    updateProfile
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../lib/firebaseConfig";
@@ -30,16 +31,19 @@ const saveUserToFirestore = async (user: any, additionalData: any = {}) => {
             lastName: additionalData.lastName || lastName,
             phone: '',
             bio: '',
-            avatarUrl: '/images/user/owner.png',
+            avatarUrl: additionalData.avatarUrl || '/images/user/owner.png',
             createdAt: Date.now(),
         });
     }
 };
 
 // 1. Registro con Correo
-export const registerWithEmail = async (email: string, pass: string, firstName: string, lastName: string) => {
+export const registerWithEmail = async (email: string, pass: string, firstName: string, lastName: string, avatarUrl: string = '/images/user/owner.png') => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-    await saveUserToFirestore(userCredential.user, { firstName, lastName });
+    await saveUserToFirestore(userCredential.user, { firstName, lastName, avatarUrl });
+    if (userCredential.user) {
+        await updateProfile(userCredential.user, { photoURL: avatarUrl, displayName: `${firstName} ${lastName}` });
+    }
     return userCredential.user;
 };
 
@@ -52,7 +56,7 @@ export const loginWithEmail = async (email: string, pass: string) => {
 // 3. Login con Google
 export const loginWithGoogle = async () => {
     const userCredential = await signInWithPopup(auth, googleProvider);
-    await saveUserToFirestore(userCredential.user);
+    await saveUserToFirestore(userCredential.user, { avatarUrl: userCredential.user.photoURL });
     return userCredential.user;
 };
 

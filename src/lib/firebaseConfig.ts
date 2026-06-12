@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 // TODO: Reemplaza esto con los datos de tu consola de Firebase
 // (Settings -> General -> Your apps -> Firebase SDK snippet)
@@ -20,3 +21,4 @@ const app = initializeApp(firebaseConfig);
 // Exportar los servicios que usaremos
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);

@@ -6,6 +6,8 @@ import Input from '../form/input/InputField';
 import Label from '../form/Label';
 import { useAuth } from '../../contexts/AuthContext';
 import { updateUserProfile } from '../../services/userService';
+import { auth } from '../../lib/firebaseConfig';
+import { updateProfile } from 'firebase/auth';
 
 const AVATARS = [
   '/images/user/owner.png',
@@ -27,6 +29,8 @@ export default function UserMetaCard() {
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [saveSuccess, setSaveSuccess] = useState('');
 
   useEffect(() => {
     if (userProfile && isOpen) {
@@ -38,26 +42,49 @@ export default function UserMetaCard() {
     }
   }, [userProfile, isOpen]);
 
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentUser) return;
+    if (!currentUser) {
+      setSaveError('No hay usuario autenticado');
+      return;
+    }
     
     setIsSaving(true);
+    setSaveError('');
+    setSaveSuccess('');
+    
     try {
+      let finalAvatarUrl = avatarUrl;
+      
       await updateUserProfile(currentUser.uid, {
         firstName,
         lastName,
         phone,
         bio,
-        avatarUrl
+        avatarUrl: finalAvatarUrl
       });
-      closeModal();
-    } catch (error) {
+      
+      if (auth.currentUser) {
+        await updateProfile(auth.currentUser, { photoURL: finalAvatarUrl });
+      }
+      
+      setSaveSuccess('Perfil actualizado correctamente');
+      
+      // Delay closing modal slightly so they see the success
+      setTimeout(() => {
+        closeModal();
+        setSaveSuccess('');
+      }, 1500);
+      
+    } catch (error: any) {
       console.error('Error updating profile:', error);
+      setSaveError(error.message || 'Error desconocido al guardar');
     } finally {
       setIsSaving(false);
     }
   };
+
 
   const currentAvatarUrl = userProfile?.avatarUrl || '/images/user/owner.png';
   const fullName = userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : 'Cargando...';
@@ -111,9 +138,19 @@ export default function UserMetaCard() {
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
               Editar Perfil
             </h4>
-            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
+            <p className="mb-4 text-sm text-gray-500 dark:text-gray-400 lg:mb-5">
               Actualiza tus datos y elige tu avatar.
             </p>
+            {saveError && (
+              <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-400 border border-red-200 dark:border-red-500/20">
+                {saveError}
+              </div>
+            )}
+            {saveSuccess && (
+              <div className="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-600 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-500/20">
+                {saveSuccess}
+              </div>
+            )}
           </div>
           <form className="flex flex-col" onSubmit={handleSave}>
             <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
@@ -121,12 +158,14 @@ export default function UserMetaCard() {
                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
                   Elige tu Avatar
                 </h5>
-                <div className="grid grid-cols-4 gap-4 mb-8 sm:grid-cols-6 lg:grid-cols-7">
+                <div className="grid grid-cols-4 gap-4 mb-4 sm:grid-cols-6 lg:grid-cols-7">
                   {AVATARS.map((url) => (
                     <div 
                       key={url}
-                      onClick={() => setAvatarUrl(url)}
-                      className={`cursor-pointer rounded-full border-2 overflow-hidden w-14 h-14 transition-all ${
+                      onClick={() => {
+                        setAvatarUrl(url);
+                      }}
+                      className={`cursor-pointer rounded-full border-[3px] overflow-hidden w-14 h-14 transition-all mx-auto ${
                         avatarUrl === url ? 'border-brand-500 scale-110 shadow-lg' : 'border-transparent hover:scale-105 opacity-70 hover:opacity-100'
                       }`}
                     >

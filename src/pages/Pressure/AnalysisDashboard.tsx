@@ -254,12 +254,15 @@ export default function AnalysisDashboard() {
           getDocs(collection(db, 'materials')),
           getDocs(query(collection(db, 'studies'), where('userId', '==', currentUser.uid)))
         ]);
+        const loadedMaterials = matsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        setMaterials(loadedMaterials);
+
         const loadedProjects = projsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter((p: any) => p.mode === 'analysis');
         setSavedProjects(loadedProjects);
         
         const projectFromState = location.state?.project;
         if (projectFromState) {
-          const found = loadedProjects.find(p => p.id === projectFromState.id);
+          const found: any = loadedProjects.find((p: any) => p.id === projectFromState.id);
           if (found) {
             setActiveCaseId(found.id);
             if (found.inputs) setForm(found.inputs);

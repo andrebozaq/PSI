@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Table, TableHeader, TableBody, TableRow, TableCell } from '../components/ui/table';
 import Badge from '../components/ui/badge/Badge';
 import { Modal } from '../components/ui/modal';
-
+import PageBreadcrumb from '../components/common/PageBreadCrumb';
 export default function SavedProjects() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -20,16 +20,7 @@ export default function SavedProjects() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const getProjectStatus = (project: any) => {
-    const rows = project.results?.final?.verificationRows;
-    if (!rows || rows.length === 0) return 'Pendiente';
-    const hasFail = rows.some((r: any) => 
-      String(r.status).toLowerCase().includes('no cumple') || 
-      String(r.status).toLowerCase().includes('falla')
-    );
-    if (hasFail) return 'No cumple';
-    return 'Cumple';
-  };
+
 
   const getMiniSummary = (project: any) => {
     const inputs = project.inputs;
@@ -128,6 +119,7 @@ export default function SavedProjects() {
 
   return (
     <div className="space-y-6">
+      <PageBreadcrumb pageTitle="Elementos a Presión" parentName="Selección de Módulo" parentPath="/proyectos" />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Diseños Guardados</h1>

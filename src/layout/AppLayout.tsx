@@ -6,7 +6,7 @@ import AppSidebar from './AppSidebar';
 import ConverterFab from '../components/common/ConverterFab';
 
 const LayoutContent: React.FC = () => {
-  const { isExpanded, isHovered, isMobileOpen } = useSidebar();
+  const { isExpanded, isHovered } = useSidebar();
 
   return (
     <div className="min-h-screen xl:flex">

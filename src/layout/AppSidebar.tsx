@@ -1,23 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { GiIBeam } from 'react-icons/gi';
 import { MdPropaneTank } from 'react-icons/md';
 import { BsPatchQuestionFill } from 'react-icons/bs';
 
 import { Link, useLocation } from 'react-router';
-import { FiMenu, FiChevronLeft } from 'react-icons/fi';
+import { FiChevronDown, FiMessageSquare } from 'react-icons/fi';
 
 // Assume these icons are imported from an icon library
 import {
-  BoxCubeIcon,
-  ChatIcon,
-  ChevronDownIcon,
   DocsIcon,
   HorizontaLDots,
   ListIcon,
-  MailIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
   TableIcon,
   UserCircleIcon,
 } from '../icons';
@@ -88,10 +81,7 @@ export const navItems: NavItem[] = [
   {
     name: 'Librería de Materiales',
     icon: <ListIcon />,
-    subItems: [
-      { name: 'Elementos de formulario', path: '/form-elements', pro: false },
-      { name: 'Layout de formulario', path: '/form-layout', pro: false },
-    ],
+    path: '/materiales',
   },
   {
     name: 'Normativas',
@@ -101,22 +91,7 @@ export const navItems: NavItem[] = [
       { name: 'Materiales ASME VIII DIV 2', path: '/data-tables', pro: false },
     ],
   },
-  {
-    name: 'Configuración del Motor',
-    icon: <PageIcon />,
-    subItems: [
-      { name: 'File Manager', path: '/file-manager', pro: false },
-      { name: 'Pricing Tables', path: '/pricing-tables', pro: false },
 
-      { name: 'Blank Page', path: '/blank', pro: false },
-      { name: '404 Error', path: '/error-404', pro: false },
-      { name: '500 Error', path: '/error-500', pro: false },
-      { name: '503 Error', path: '/error-503', pro: false },
-      { name: 'Próximamente', path: '/proximamente', pro: false },
-      { name: 'Maintenance', path: '/maintenance', pro: false },
-      { name: 'Success', path: '/success', pro: false },
-    ],
-  },
   {
     icon: <DocsIcon />,
     name: 'Proyectos guardados',
@@ -128,89 +103,21 @@ export const navItems: NavItem[] = [
     path: '/perfil',
   },
   {
+    icon: <FiMessageSquare />,
+    name: 'Foro Global',
+    path: '/foro',
+  },
+  {
     icon: <BsPatchQuestionFill />,
     name: 'Preguntas frecuentes',
     path: '/faq',
   },
 ];
 
-export const othersItems: NavItem[] = [
-  {
-    icon: <PieChartIcon />,
-    name: 'Gráficos',
-    subItems: [
-      { name: 'Line Chart', path: '/line-chart', pro: true },
-      { name: 'Bar Chart', path: '/bar-chart', pro: true },
-      { name: 'Pie Chart', path: '/pie-chart', pro: true },
-    ],
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: 'Elementos de UI',
-    subItems: [
-      { name: 'Alerts', path: '/alerts', pro: false },
-      { name: 'Avatar', path: '/avatars', pro: false },
-      { name: 'Badge', path: '/badge', pro: false },
-      { name: 'Breadcrumb', path: '/breadcrumb', pro: true },
-      { name: 'Buttons', path: '/buttons', pro: false },
-      { name: 'Buttons Group', path: '/buttons-group', pro: true },
-      { name: 'Cards', path: '/cards', pro: true },
-      { name: 'Carousel', path: '/carousel', pro: true },
-      { name: 'Dropdowns', path: '/dropdowns', pro: true },
-      { name: 'Images', path: '/images', pro: false },
-      { name: 'Links', path: '/links', pro: true },
-      { name: 'List', path: '/list', pro: true },
-      { name: 'Modals', path: '/modals', pro: true },
-      { name: 'Notification', path: '/notifications', pro: true },
-      { name: 'Pagination', path: '/pagination', pro: true },
-      { name: 'Popovers', path: '/popovers', pro: true },
-      { name: 'Progressbar', path: '/progress-bar', pro: true },
-      { name: 'Ribbons', path: '/ribbons', pro: true },
-      { name: 'Spinners', path: '/spinners', pro: true },
-      { name: 'Tabs', path: '/tabs', pro: true },
-      { name: 'Tooltips', path: '/tooltips', pro: true },
-      { name: 'Videos', path: '/videos', pro: false },
-    ],
-  },
-  {
-    icon: <PlugInIcon />,
-    name: 'Autenticación',
-    subItems: [
-      { name: 'Log in', path: '/login', pro: false },
-      { name: 'Registrarse', path: '/registro', pro: false },
-      { name: 'Recuperar contraseña', path: '/reset-password', pro: true },
-      {
-        name: 'Verificación de dos pasos',
-        path: '/two-step-verification',
-        pro: true,
-      },
-    ],
-  },
-];
 
-export const supportItems: NavItem[] = [
-  {
-    icon: <ChatIcon />,
-    name: 'Chat',
-    path: '/chat',
-  },
-  {
-    icon: <MailIcon />,
-    name: 'Email',
-    subItems: [
-      { name: 'Inbox', path: '/inbox' },
-      { name: 'Details', path: '/inbox-details' },
-    ],
-  },
-  {
-    icon: <DocsIcon />,
-    name: 'Documentación',
-    path: '/documentacion',
-  },
-];
 
 const AppSidebar: React.FC = () => {
-  const { isExpanded, isMobileOpen, toggleSidebar } = useSidebar();
+  const { isExpanded, isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
   const location = useLocation();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
@@ -268,6 +175,10 @@ const AppSidebar: React.FC = () => {
     index: number,
     menuType: 'main' | 'support' | 'others',
   ) => {
+    if (!isExpanded && !isMobileOpen) {
+      if (window.innerWidth >= 1024) toggleSidebar();
+      else toggleMobileSidebar();
+    }
     setOpenSubmenu((prevOpenSubmenu) => {
       if (
         prevOpenSubmenu &&
@@ -286,48 +197,57 @@ const AppSidebar: React.FC = () => {
   ) => (
     <ul className="flex flex-col gap-4">
       {items.map((nav, index) => (
-        <li key={nav.name} className="group relative">
+        <li key={index} className="relative group">
           {nav.subItems ? (
-            <button
-              onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`menu-item group ${
-                openSubmenu?.type === menuType && openSubmenu?.index === index
-                  ? 'menu-item-active'
-                  : 'menu-item-inactive'
-              } cursor-pointer ${
-                !isExpanded
-                  ? 'lg:justify-center'
-                  : 'lg:justify-start'
-              }`}
-            >
-              <span
-                className={`menu-item-icon-size  ${
+            <React.Fragment>
+              <button
+                onClick={() => handleSubmenuToggle(index, menuType)}
+                className={`menu-item group ${
                   openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? 'menu-item-icon-active'
-                    : 'menu-item-icon-inactive'
+                    ? 'menu-item-active'
+                    : 'menu-item-inactive'
+                } cursor-pointer ${
+                  !isExpanded
+                    ? 'lg:justify-center'
+                    : 'lg:justify-start'
                 }`}
               >
-                {nav.icon}
-              </span>
-              {(isExpanded || isMobileOpen) && (
-                <span className="menu-item-text">{nav.name}</span>
-              )}
-              {(isExpanded || isMobileOpen) && (
-                <ChevronDownIcon
-                  className={`ml-auto w-5 h-5 transition-transform duration-200 ${
-                    openSubmenu?.type === menuType &&
-                    openSubmenu?.index === index
-                      ? 'rotate-180 text-brand-500'
-                      : ''
+                <span
+                  className={`menu-item-icon-size ${
+                    openSubmenu?.type === menuType && openSubmenu?.index === index
+                      ? 'menu-item-icon-active'
+                      : 'menu-item-icon-inactive'
                   }`}
-                />
-              )}
-            </button>
+                >
+                  {nav.icon}
+                </span>
+                {(isExpanded || isMobileOpen) && (
+                  <span className="menu-item-text">{nav.name}</span>
+                )}
+                {(isExpanded || isMobileOpen) && (
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <FiChevronDown
+                      className={`transition-transform duration-200 ${
+                        openSubmenu?.type === menuType &&
+                        openSubmenu?.index === index
+                          ? 'rotate-180'
+                          : ''
+                      }`}
+                    />
+                  </span>
+                )}
+                {!isExpanded && !isMobileOpen && (
+                  <span className="absolute left-14 rounded-md bg-slate-800 px-2 py-1.5 text-xs font-medium text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 pointer-events-none z-[999] whitespace-nowrap shadow-sm dark:bg-gray-100 dark:text-gray-900">
+                    {nav.name}
+                  </span>
+                )}
+              </button>
+            </React.Fragment>
           ) : (
             nav.path && (
               <Link
                 to={nav.path}
-                className={`menu-item group ${
+                className={`menu-item group relative ${
                   isActive(nav.path) ? 'menu-item-active' : 'menu-item-inactive'
                 }`}
               >
@@ -342,6 +262,11 @@ const AppSidebar: React.FC = () => {
                 </span>
                 {(isExpanded || isMobileOpen) && (
                   <span className="menu-item-text">{nav.name}</span>
+                )}
+                {!isExpanded && !isMobileOpen && (
+                  <span className="absolute left-14 rounded-md bg-slate-800 px-2 py-1.5 text-xs font-medium text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 pointer-events-none z-[999] whitespace-nowrap shadow-sm dark:bg-gray-100 dark:text-gray-900">
+                    {nav.name}
+                  </span>
                 )}
               </Link>
             )
@@ -401,11 +326,7 @@ const AppSidebar: React.FC = () => {
               </ul>
             </div>
           )}
-          {!isExpanded && !isMobileOpen && (
-            <span className="absolute left-full ml-2 top-1/2 -translate-y-1/2 rounded-md bg-gray-900 px-2 py-1.5 text-xs font-medium text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 pointer-events-none z-50 whitespace-nowrap shadow-sm dark:bg-gray-100 dark:text-gray-900">
-              {nav.name}
-            </span>
-          )}
+
         </li>
       ))}
     </ul>
@@ -422,50 +343,62 @@ const AppSidebar: React.FC = () => {
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0`}
     >
-      <div
-        className={`py-8 flex group relative ${
-          !isExpanded ? 'justify-center' : 'justify-between items-center'
-        }`}
-      >
-        {!isExpanded && !isMobileOpen ? (
-          <>
-            <Link to="/" className="block group-hover:hidden">
-              <img
-                src="/images/logo/icon.png"
-                alt="Logo"
-                width={32}
-                height={32}
-              />
-            </Link>
-            <button onClick={toggleSidebar} className="hidden group-hover:block text-gray-500 hover:text-brand-500 transition-colors">
-              <FiMenu size={24} />
-            </button>
-          </>
-        ) : (
-          <>
-            <Link to="/">
-              <img
-                className="hidden sm:block dark:sm:hidden"
-                src="/images/logo/PSI.png"
-                alt="Logo"
-                width={200}
-                height={40}
-              />
-              <img
-                className="hidden dark:sm:block"
-                src="/images/logo/PSI.png"
-                alt="Logo"
-                width={200}
-                height={40}
-              />
-            </Link>
-            <button onClick={toggleSidebar} className="text-gray-500 hover:text-brand-500 transition-colors">
-              <FiChevronLeft size={24} />
-            </button>
-          </>
-        )}
-      </div>
-      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+      {!isExpanded && !isMobileOpen ? (
+        <div className="flex items-center justify-center w-full h-16 group relative">
+          <Link to="/" className="flex items-center justify-center w-8 h-8 group-hover:hidden transition-all duration-200">
+            <img
+              src="/images/logo/icon.png"
+              alt="Logo"
+              width={32}
+              height={32}
+            />
+          </Link>
+          <button
+            onClick={() => {
+              if (window.innerWidth >= 1024) toggleSidebar();
+              else toggleMobileSidebar();
+            }}
+            title="Expandir menú"
+            className="hidden group-hover:flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <line x1="9" y1="3" x2="9" y2="21" />
+              <path d="M13 15l3-3-3-3" />
+            </svg>
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between w-full h-16 px-4">
+          <Link to="/">
+            <img
+              className="hidden sm:block dark:sm:hidden h-8 w-auto"
+              src="/images/logo/PSI.png"
+              alt="Logo"
+            />
+            <img
+              className="hidden dark:sm:block h-8 w-auto"
+              src="/images/logo/PSI.png"
+              alt="Logo"
+            />
+          </Link>
+          <button
+            onClick={() => {
+              if (window.innerWidth >= 1024) toggleSidebar();
+              else toggleMobileSidebar();
+            }}
+            title="Contraer menú"
+            className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <line x1="9" y1="3" x2="9" y2="21" />
+              <path d="M15 15l-3-3 3-3" />
+            </svg>
+          </button>
+        </div>
+      )}
+      <div className={`flex flex-col duration-300 ease-linear no-scrollbar ${isExpanded || isMobileOpen ? 'overflow-y-auto' : 'overflow-visible'}`}>
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
             <div>
