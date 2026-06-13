@@ -1,5 +1,5 @@
 import { collection, addDoc, getDocs, deleteDoc } from "firebase/firestore";
-import { db } from "../lib/firebaseConfig";
+import { db } from "../config/firebase";
 
 const materialsDataset = [
   // --- ACEROS DE RECIPIENTE (PLANCHAS) ---

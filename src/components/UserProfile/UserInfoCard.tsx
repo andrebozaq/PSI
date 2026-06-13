@@ -1,4 +1,4 @@
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../features/auth/contexts/AuthContext';
 
 export default function UserInfoCard() {
   const { userProfile, currentUser } = useAuth();

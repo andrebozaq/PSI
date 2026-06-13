@@ -1,0 +1,17 @@
+import PageMeta from '../../../components/common/PageMeta';
+import AuthLayout from '../../../pages/AuthPages/AuthPageLayout';
+import SignUpForm from '../components/SignUpForm';
+
+export default function SignUp() {
+  return (
+    <>
+      <PageMeta
+        title="PSI Registro | Software de ingeniería"
+        description="This is React.js SignUp Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+      />
+      <AuthLayout>
+        <SignUpForm />
+      </AuthLayout>
+    </>
+  );
+}

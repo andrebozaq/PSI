@@ -1,0 +1,17 @@
+import PageMeta from '../../../components/common/PageMeta';
+import AuthLayout from '../../../pages/AuthPages/AuthPageLayout';
+import ResetPasswordForm from '../../../components/auth/ResetPasswordForm';
+
+export default function ResetPassword() {
+  return (
+    <>
+      <PageMeta
+        title="PSI Recuperar contraseña | Software de ingeniería"
+        description="This is React.js Reset Password Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+      />
+      <AuthLayout>
+        <ResetPasswordForm />
+      </AuthLayout>
+    </>
+  );
+}

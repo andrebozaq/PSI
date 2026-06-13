@@ -13,8 +13,8 @@ import {
 import PageMeta from '../components/common/PageMeta';
 import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../lib/firebaseConfig';
-import { useAuth } from '../contexts/AuthContext';
+import { db } from '../config/firebase';
+import { useAuth } from '../features/auth/contexts/AuthContext';
 
 const moduleSlides = [
   {

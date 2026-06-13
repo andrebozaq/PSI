@@ -1,6 +1,6 @@
 import { collection, setDoc, doc } from 'firebase/firestore';
-import { db } from './firebaseConfig';
-import { STANDARD_LEG_PROFILES } from '../pages/Pressure/supports/DesignCalculations/LegUtils';
+import { db } from '../config/firebase';
+import { STANDARD_LEG_PROFILES } from '../features/engineering/supports/DesignCalculations/LegUtils';
 
 const BOLT_MATERIALS: Record<string, { Fu: number; Fy: number }> = {
 	'Acero al carbono': { Fu: 400, Fy: 250 },

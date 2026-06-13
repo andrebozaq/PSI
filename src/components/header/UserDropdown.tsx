@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { DropdownItem } from '../ui/dropdown/DropdownItem';
 import { Dropdown } from '../ui/dropdown/Dropdown';
 import { useNavigate } from 'react-router';
-import { logout } from '../../services/authService';
-import { useAuth } from '../../contexts/AuthContext';
+import { logout } from '../../features/auth/services/authService';
+import { useAuth } from '../../features/auth/contexts/AuthContext';
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
