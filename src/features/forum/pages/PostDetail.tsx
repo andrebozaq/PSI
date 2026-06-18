@@ -101,7 +101,7 @@ const PostDetail: React.FC = () => {
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim() || !postId) return;
+    if (!newComment.trim() || !postId || !post) return;
 
     setIsSubmitting(true);
     try {
@@ -116,6 +116,27 @@ const PostDetail: React.FC = () => {
         authorPhoto: currentUser?.photoURL || '',
         createdAt: serverTimestamp(),
       });
+
+      if (currentUser) {
+        const participants = new Set<string>();
+        participants.add(post.authorId);
+        comments.forEach(c => participants.add(c.authorId));
+        participants.delete(currentUser.uid);
+
+        const notificationsRef = collection(db, 'notifications');
+        const notificationPromises = Array.from(participants).map(participantId => 
+          addDoc(notificationsRef, {
+            userId: participantId,
+            postId: postId,
+            actorName: authorName,
+            type: participantId === post.authorId ? 'OWN_POST' : 'PARTICIPATED',
+            read: false,
+            createdAt: serverTimestamp()
+          })
+        );
+        await Promise.all(notificationPromises);
+      }
+
       setNewComment('');
     } catch (error) {
       console.error('Error adding comment:', error);
